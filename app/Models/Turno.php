@@ -24,4 +24,16 @@ class Turno extends Model
         'hora_fin' => 'datetime',
         'habilitado' => 'boolean',
     ];
+
+    // Relación con Estado
+    public function estado()
+    {
+        return $this->belongsTo(Estado::class, 'estado_id');
+    }
+
+    // Relación con Curso
+    public function cursos()
+    {
+        return $this->hasMany(Curso::class, 'turno_id');    
+    }
 }

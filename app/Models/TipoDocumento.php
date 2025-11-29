@@ -21,4 +21,10 @@ class TipoDocumento extends Model
     protected $casts = [
         'habilitado' => 'boolean',
     ];
+
+    // Relación con DocumentoProfesor
+    public function documentosProfesores()
+    {
+        return $this->hasMany(DocumentoProfesor::class, 'tipo_documento_id');
+    }
 }

@@ -26,7 +26,7 @@ class UsuarioResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Personal';
+    protected static string|UnitEnum|null $navigationGroup = 'Seguridad';
 
     public static function form(Schema $schema): Schema
     {

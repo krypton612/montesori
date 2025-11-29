@@ -25,4 +25,17 @@ class Estado extends Model
     protected $casts = [
         'habilitado' => 'boolean',
     ];
+
+
+
+
+    public function turnos()
+    {
+        return $this->hasMany(Turno::class, 'estado_id');
+    }
+
+    public function cursos()
+    {
+        return $this->hasMany(Curso::class, 'estado_id');
+    }
 }

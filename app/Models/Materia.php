@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Materia extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'materia';
 
     protected $fillable = [
@@ -29,5 +29,11 @@ class Materia extends Model
     public function mallas()
     {
         return $this->hasMany(MallaCurricular::class, 'materia_id');
+    }
+
+    // Relación con cursos
+    public function cursos()
+    {
+        return $this->hasMany(Curso::class, 'materia_id');
     }
 }

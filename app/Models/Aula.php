@@ -9,7 +9,6 @@ use Illuminate\Testing\Fluent\Concerns\Has;
 class Aula extends Model
 {
     use HasFactory;
-    
     protected $table = 'aula';
 
     // Campos asignables en masa
@@ -25,4 +24,10 @@ class Aula extends Model
         'habilitado' => 'boolean',
         'capacidad' => 'integer',
     ];
+
+    // Relación con Horario
+    public function horarios()
+    {
+        return $this->hasMany(Horario::class, 'aula_id');
+    }
 }
