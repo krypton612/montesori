@@ -1,15 +1,19 @@
-# montesori
+# SISTEMA EMANUEL MONTESORI
 
-Aplicación web basada en **Laravel** para la gestión académica y administrativa de una **institución educativa pública**.  
+Aplicación web basada en **Laravel** para la gestión académica y administrativa de una **Institución Pedadogica Emanuel Montesori**.  
 El proyecto está organizado en módulos (estudiantes, inscripciones, pagos, evaluaciones, etc.) y se estructura mediante *milestones* en GitHub.
-
-Este archivo forma parte del milestone **“Documentación del repositorio”**.
+<p align="left">
+  <a href="#"><img src="https://img.shields.io/badge/estado-en%20desarrollo-yellow" alt="Estado: en desarrollo"></a>
+  <a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-backend-777bb4?logo=php&logoColor=white" alt="PHP"></a>
+  <a href="https://laravel.com/"><img src="https://img.shields.io/badge/Laravel-framework-FF2D20?logo=laravel&logoColor=white" alt="Laravel"></a>
+  <a href="#"><img src="https://img.shields.io/badge/milestone-documentaci%C3%B3n%20del%20repositorio-blue" alt="Milestone: Documentación del repositorio"></a>
+</p>
 
 ---
 
-## Objetivos del proyecto
+## 🎯 Objetivos del proyecto
 
-El proyecto **montesori** busca:
+El proyecto **EMANUEL MONTESORI** tiene como objetivos principales:
 
 - Centralizar la información académica y administrativa de la institución.
 - Definir una estructura clara de entidades educativas (gestiones/años, ciclos, cursos, aulas y niveles).
@@ -37,19 +41,23 @@ Estos objetivos se desglosan en los siguientes milestones principales del proyec
 
 ---
 
-## Tecnologías
+## 🏛 Arquitectura y tecnologías
 
-El proyecto está construido sobre:
+El sistema está construido sobre el ecosistema de **Laravel**:
 
-- **Framework**: [Laravel](https://laravel.com/)
-- **Lenguaje**: PHP
-- **Vistas**: Blade
-- **Empaquetador frontend**: Vite
-- **Gestión de dependencias backend**: Composer
-- **Gestión de dependencias frontend**: npm
-- **Base de datos**: motor SQL (por ejemplo MySQL/MariaDB o PostgreSQL)
-
-> La versión exacta de PHP, Laravel y otras dependencias se puede consultar en el archivo `composer.json`.
+- **Backend**
+  - PHP
+  - Laravel (framework MVC)
+  - Eloquent ORM para acceso a datos
+- **Frontend**
+  - Blade (sistema de plantillas de Laravel)
+  - Vite para la compilación de assets (JS/CSS)
+  - npm para gestión de dependencias frontend
+- **Base de datos**
+  - Motor SQL (MySQL/MariaDB, PostgreSQL u otro compatible)
+- **Herramientas adicionales**
+  - Composer para dependencias PHP
+  - PHPUnit / tests de Laravel para pruebas automatizadas
 
 ---
 
@@ -78,11 +86,12 @@ Adicionalmente:
 
 ---
 
-## Instalación (entorno local)
+## ⚙️ Instalación (entorno local)
+
+> 👀 Si vas a contribuir con cambios al repositorio, revisa primero la sección  
+> [Contribuir (vía fork)](#-contribuir-vía-fork).
 
 ### 1. Clonar el repositorio
-
-Si solo quieres probar el proyecto (sin contribuir):
 
 ```bash
 git clone https://github.com/krypton612/montesori.git
