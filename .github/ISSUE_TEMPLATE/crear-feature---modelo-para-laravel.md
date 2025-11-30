@@ -22,11 +22,19 @@ Complete los campos necesarios para generar la migración:
 **Nombre de la tabla:**  
 
 ### 🗂️ Columnas
-Liste cada columna en formato clave-valor:
+Liste cada columna en formato simplificada:
 
-- **nombre_columna**: tipo, nullable?, default?, unique?, comentarios
-- **ejemplo:** `first_name`: string, required  
-- …
+para generar una migracion con los atributos basicos ejecutar
+
+`php artisan make:migration create_nombreTabla_table --table=nombre_tabla`
+
+| **Nombre columna** | **Tipo** | **Nullable** | **Default** | **Unique** | **Comentarios** |
+|--------------------|----------|--------------|-------------|------------|------------------|
+| id         | int   | no           | n+1           | si         | Llave primaria |
+| ...          | ...   | ...           | ...           | ...         | ... |
+| created_at             | datetime     | null           | ahora      | no         | Cuando se crea el registro |
+| updated_at             | datetime     | null           | ahora      | no         | Cuando se actualiza el registro |
+
 
 ### 🔗 Relaciones
 - **belongsTo:**  
