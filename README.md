@@ -113,3 +113,41 @@ Además, debes contar con algún entorno local, por ejemplo:
 ```bash
 git clone https://github.com/krypton612/montesori.git
 cd montesori
+```
+ejecutar los siguientes comandos para instalar dependencias y levantar el proyecto en entorno local.
+
+## 1. Instalar dependencias de PHP
+- composer install
+
+## 2. Configurar entorno de la aplicación
+- cp .env.example .env
+- php artisan key:generate
+
+Editar el archivo .env para configurar la base de datos y otros parámetros (APP_NAME, APP_URL, etc.).
+
+## 3. Ejecutar migraciones y seeders
+- php artisan migrate
+- php artisan db:seed
+
+# o en un solo paso:
+- php artisan migrate --seed
+
+## 4. Crear enlace de almacenamiento
+- php artisan storage:link
+
+## 5. Instalar dependencias de frontend
+- npm install
+
+## 6. Compilar assets
+Modo desarrollo:
+- npm run dev
+
+Compilación para producción:
+- npm run build
+
+## 7. Levantar el servidor de Laravel
+- php artisan serve
+
+La aplicación quedará disponible, por defecto, en:
+http://localhost:8000
+
