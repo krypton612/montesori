@@ -1,59 +1,89 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# montesori
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplicación web basada en **Laravel** para la gestión académica y administrativa de una **institución educativa pública**.  
+El proyecto está organizado en módulos (estudiantes, inscripciones, pagos, evaluaciones, etc.) y se estructura mediante *milestones* en GitHub.
 
-## About Laravel
+Este archivo forma parte del milestone **“Documentación del repositorio”**.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Objetivos del proyecto
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+El proyecto **montesori** busca:
 
-## Learning Laravel
+- Centralizar la información académica y administrativa de la institución.
+- Definir una estructura clara de entidades educativas (gestiones/años, ciclos, cursos, aulas y niveles).
+- Gestionar estudiantes, apoderados y su relación.
+- Controlar inscripciones/matrículas por gestión, curso y aula, incluyendo cupos y requisitos.
+- Administrar la asignación académica de profesores a cursos y materias.
+- Registrar evaluaciones y notas, y calcular promedios.
+- Gestionar pagos, deudas y el estado del estudiante (habilitado/bloqueado).
+- Ofrecer un panel de reportes y dashboard con estadísticas relevantes.
+- Implementar un núcleo de seguridad con usuarios, roles y permisos.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Estos objetivos se desglosan en los siguientes milestones principales del proyecto (entre otros):
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Documentación del repositorio**  
+- **Módulo Gestión de Entidades Educativas**  
+- **Módulo Estudiantes y Apoderados**  
+- **Módulo Inscripciones / Matrículas**  
+- **Módulo Profesores / Asignación Académica**  
+- **Módulo Evaluaciones / Notas**  
+- **Módulo Pagos / Finanzas**  
+- **Módulo Reportes / Dashboard**  
+- **Módulo Núcleo / Seguridad / Usuarios**  
 
-## Laravel Sponsors
+> Para más detalles puedes revisar la sección de *Milestones* en GitHub.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## Tecnologías
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+El proyecto está construido sobre:
 
-## Contributing
+- **Framework**: [Laravel](https://laravel.com/)
+- **Lenguaje**: PHP
+- **Vistas**: Blade
+- **Empaquetador frontend**: Vite
+- **Gestión de dependencias backend**: Composer
+- **Gestión de dependencias frontend**: npm
+- **Base de datos**: motor SQL (por ejemplo MySQL/MariaDB o PostgreSQL)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+> La versión exacta de PHP, Laravel y otras dependencias se puede consultar en el archivo `composer.json`.
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Estado del proyecto
 
-## Security Vulnerabilities
+- Rama principal de desarrollo: **`develop`**.
+- El proyecto se encuentra en una fase inicial: se están definiendo los modelos base (por ejemplo, el modelo de Usuario) y la estructura de módulos mediante milestones e issues.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Revisa los **Issues** y **Milestones** del repositorio para conocer el estado actual de cada módulo.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Requisitos previos
+
+Para ejecutar el proyecto en local necesitas:
+
+- **Git**
+- **PHP 8.x** (con las extensiones requeridas por Laravel)
+- **Composer**
+- **Node.js** y **npm**
+- Un motor de **base de datos** (MySQL/MariaDB, PostgreSQL, etc.)
+
+Adicionalmente:
+
+- Configurar un entorno local (por ejemplo, Laravel Sail, Docker, XAMPP, Laragon, Valet, etc.) según tus preferencias.
+
+---
+
+## Instalación (entorno local)
+
+### 1. Clonar el repositorio
+
+Si solo quieres probar el proyecto (sin contribuir):
+
+```bash
+git clone https://github.com/krypton612/montesori.git
+cd montesori
