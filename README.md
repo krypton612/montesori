@@ -1,11 +1,14 @@
 # SISTEMA EMANUEL MONTESORI
 
-Aplicación web basada en **Laravel** para la gestión académica y administrativa de una **Institución Pedadogica Emanuel Montesori**.  
-El proyecto está organizado en módulos (estudiantes, inscripciones, pagos, evaluaciones, etc.) y se estructura mediante *milestones* en GitHub.
+Aplicación web basada en **Laravel** y el ecosistema de **FilamentPHP** para la gestión académica y administrativa de la **Institución Pedagógica Infantil "Emanuel Montesori"**.  
+El proyecto está organizado en módulos (estudiantes, inscripciones, pagos, evaluaciones, etc.) y se estructura mediante *milestones* en GitHub.  
+**FilamentPHP** actúa como plugin de frontend y backend para la construcción del panel administrativo sobre los modelos y servicios de Laravel.
+
 <p align="left">
   <a href="#"><img src="https://img.shields.io/badge/estado-en%20desarrollo-yellow" alt="Estado: en desarrollo"></a>
   <a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-backend-777bb4?logo=php&logoColor=white" alt="PHP"></a>
   <a href="https://laravel.com/"><img src="https://img.shields.io/badge/Laravel-framework-FF2D20?logo=laravel&logoColor=white" alt="Laravel"></a>
+  <a href="https://filamentphp.com"><img src="https://img.shields.io/badge/FilamentPHP-admin%20panel-0ea5e9" alt="FilamentPHP"></a>
   <a href="#"><img src="https://img.shields.io/badge/milestone-documentaci%C3%B3n%20del%20repositorio-blue" alt="Milestone: Documentación del repositorio"></a>
 </p>
 
@@ -43,45 +46,46 @@ Estos objetivos se desglosan en los siguientes milestones principales del proyec
 
 ## 🏛 Arquitectura y tecnologías
 
-El sistema está construido sobre el ecosistema de **Laravel** y **FilamentPHP** convirtiendolo un framework completo:
+El sistema está construido sobre el ecosistema de **Laravel** y un conjunto de herramientas modernas para backend y frontend.
 
-- **Capa de aplicación (backend)**
-  - PHP
-  - Laravel (framework MVC)
-  - Eloquent ORM para acceso a datos y modelado de entidades
-  - Servicios / lógica de negocio de la institución
+- **Backend**
+  - **PHP 8.x** – Lenguaje principal del servidor.
+  - **Laravel** – Framework MVC para la lógica de negocio, routing, middleware, colas, etc.
+  - **Eloquent ORM** – Mapeo objeto–relacional para acceso y gestión de datos.
+  - **FilamentPHP** – Plugin de administración que se integra directamente con Laravel para construir paneles y recursos sobre los modelos de Eloquent.
+  - **PHPUnit / Pruebas de Laravel** – Para pruebas automatizadas de la aplicación.
+  - **Composer** – Gestor de dependencias PHP.
 
-- **Capa de administración (panel interno)**
-  - FilamentPHP  
-    - Panel administrativo para gestionar entidades (estudiantes, inscripciones, pagos, etc.).
-    - Definición de recursos, formularios, tablas y dashboards desde PHP.
-    - Basado en **Laravel Livewire** y **Alpine.js** para generar interfaces reactivas.  
-    - Se considera un *frontend de backend* porque construye la interfaz de gestión directamente sobre la capa de datos y lógica del servidor.
-
-- **Capa de presentación pública (frontend)**
-  - Blade (sistema de plantillas de Laravel) para vistas públicas y/o portal académico.
-  - Vite para la compilación de assets (JS/CSS).
-  - npm para la gestión de dependencias frontend.
+- **Frontend (administrativo y público)**
+  - **FilamentPHP** (plugin frontend y backend a la vez)  
+    - Usa **Laravel Livewire** para componentes dinámicos sin escribir JavaScript explícito.
+    - Utiliza **Alpine.js** para interactividad ligera en el navegador.
+    - Se apoya en **Tailwind CSS** (por defecto) para estilos del panel administrativo.
+  - **Blade** – Sistema de plantillas de Laravel para vistas públicas o secciones personalizadas.
+  - **Vite** – Empaquetador y servidor de desarrollo para assets (JS, CSS).
+  - **npm** – Gestor de dependencias y scripts para el frontend.
 
 - **Base de datos**
-  - Motor SQL (MySQL/MariaDB, PostgreSQL u otro compatible).
+  - Motor SQL compatible (por ejemplo **MySQL/MariaDB** o **PostgreSQL**) para el almacenamiento persistente de la información.
 
 - **Herramientas adicionales**
-  - Composer para dependencias PHP.
-  - PHPUnit / pruebas de Laravel para tests automatizados.
+  - **Git** para control de versiones.
+  - Entornos locales como **Docker / Laravel Sail**, **XAMPP**, **Laragon**, etc. (opcionales según preferencia).
+
+En conjunto, **FilamentPHP** actúa como un puente entre el backend (Laravel/Eloquent) y el frontend (Livewire/Alpine/Tailwind), permitiendo construir rápidamente interfaces administrativas modernas sobre la lógica de negocio del sistema.
 
 ---
 
-## Estado del proyecto
+## 📌 Estado del proyecto
 
-- Rama principal de desarrollo: **`develop`**.
+- Rama principal de desarrollo: **`develop`**.  
 - El proyecto se encuentra en una fase inicial: se están definiendo los modelos base (por ejemplo, el modelo de Usuario) y la estructura de módulos mediante milestones e issues.
 
 Revisa los **Issues** y **Milestones** del repositorio para conocer el estado actual de cada módulo.
 
 ---
 
-## Requisitos previos
+## ✅ Requisitos previos
 
 Para ejecutar el proyecto en local necesitas:
 
@@ -91,9 +95,11 @@ Para ejecutar el proyecto en local necesitas:
 - **Node.js** y **npm**
 - Un motor de **base de datos** (MySQL/MariaDB, PostgreSQL, etc.)
 
-Adicionalmente:
+Además, debes contar con algún entorno local, por ejemplo:
 
-- Configurar un entorno local (por ejemplo, Laravel Sail, Docker, XAMPP, Laragon, Valet, etc.) según tus preferencias.
+- Laravel Sail / Docker  
+- XAMPP, Laragon, WAMP, etc.  
+- Laravel Valet (en macOS)
 
 ---
 
