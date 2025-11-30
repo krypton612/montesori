@@ -43,21 +43,32 @@ Estos objetivos se desglosan en los siguientes milestones principales del proyec
 
 ## 🏛 Arquitectura y tecnologías
 
-El sistema está construido sobre el ecosistema de **Laravel**:
+El sistema está construido sobre el ecosistema de **Laravel** y **FilamentPHP** convirtiendolo un framework completo:
 
-- **Backend**
+- **Capa de aplicación (backend)**
   - PHP
   - Laravel (framework MVC)
-  - Eloquent ORM para acceso a datos
-- **Frontend**
-  - Blade (sistema de plantillas de Laravel)
-  - Vite para la compilación de assets (JS/CSS)
-  - npm para gestión de dependencias frontend
+  - Eloquent ORM para acceso a datos y modelado de entidades
+  - Servicios / lógica de negocio de la institución
+
+- **Capa de administración (panel interno)**
+  - FilamentPHP  
+    - Panel administrativo para gestionar entidades (estudiantes, inscripciones, pagos, etc.).
+    - Definición de recursos, formularios, tablas y dashboards desde PHP.
+    - Basado en **Laravel Livewire** y **Alpine.js** para generar interfaces reactivas.  
+    - Se considera un *frontend de backend* porque construye la interfaz de gestión directamente sobre la capa de datos y lógica del servidor.
+
+- **Capa de presentación pública (frontend)**
+  - Blade (sistema de plantillas de Laravel) para vistas públicas y/o portal académico.
+  - Vite para la compilación de assets (JS/CSS).
+  - npm para la gestión de dependencias frontend.
+
 - **Base de datos**
-  - Motor SQL (MySQL/MariaDB, PostgreSQL u otro compatible)
+  - Motor SQL (MySQL/MariaDB, PostgreSQL u otro compatible).
+
 - **Herramientas adicionales**
-  - Composer para dependencias PHP
-  - PHPUnit / tests de Laravel para pruebas automatizadas
+  - Composer para dependencias PHP.
+  - PHPUnit / pruebas de Laravel para tests automatizados.
 
 ---
 
