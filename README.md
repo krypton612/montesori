@@ -1,59 +1,153 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SISTEMA EMANUEL MONTESORI
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+Aplicación web basada en **Laravel** y el ecosistema de **FilamentPHP** para la gestión académica y administrativa de la **Institución Pedagógica Infantil "Emanuel Montesori"**.  
+El proyecto está organizado en módulos (estudiantes, inscripciones, pagos, evaluaciones, etc.) y se estructura mediante *milestones* en GitHub.  
+**FilamentPHP** actúa como plugin de frontend y backend para la construcción del panel administrativo sobre los modelos y servicios de Laravel.
+
+<p align="left">
+  <a href="#"><img src="https://img.shields.io/badge/estado-en%20desarrollo-yellow" alt="Estado: en desarrollo"></a>
+  <a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-backend-777bb4?logo=php&logoColor=white" alt="PHP"></a>
+  <a href="https://laravel.com/"><img src="https://img.shields.io/badge/Laravel-framework-FF2D20?logo=laravel&logoColor=white" alt="Laravel"></a>
+  <a href="https://filamentphp.com"><img src="https://img.shields.io/badge/FilamentPHP-admin%20panel-0ea5e9" alt="FilamentPHP"></a>
+  <a href="#"><img src="https://img.shields.io/badge/milestone-documentaci%C3%B3n%20del%20repositorio-blue" alt="Milestone: Documentación del repositorio"></a>
 </p>
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🎯 Objetivos del proyecto
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+El proyecto **EMANUEL MONTESORI** tiene como objetivos principales:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Centralizar la información académica y administrativa de la institución.
+- Definir una estructura clara de entidades educativas (gestiones/años, ciclos, cursos, aulas y niveles).
+- Gestionar estudiantes, apoderados y su relación.
+- Controlar inscripciones/matrículas por gestión, curso y aula, incluyendo cupos y requisitos.
+- Administrar la asignación académica de profesores a cursos y materias.
+- Registrar evaluaciones y notas, y calcular promedios.
+- Gestionar pagos, deudas y el estado del estudiante (habilitado/bloqueado).
+- Ofrecer un panel de reportes y dashboard con estadísticas relevantes.
+- Implementar un núcleo de seguridad con usuarios, roles y permisos.
 
-## Learning Laravel
+Estos objetivos se desglosan en los siguientes milestones principales del proyecto (entre otros):
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- **Documentación del repositorio**  
+- **Módulo Gestión de Entidades Educativas**  
+- **Módulo Estudiantes y Apoderados**  
+- **Módulo Inscripciones / Matrículas**  
+- **Módulo Profesores / Asignación Académica**  
+- **Módulo Evaluaciones / Notas**  
+- **Módulo Pagos / Finanzas**  
+- **Módulo Reportes / Dashboard**  
+- **Módulo Núcleo / Seguridad / Usuarios**  
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+> Para más detalles puedes revisar la sección de *Milestones* en GitHub.
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🏛 Arquitectura y tecnologías
 
-### Premium Partners
+El sistema está construido sobre el ecosistema de **Laravel** y un conjunto de herramientas modernas para backend y frontend.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- **Backend**
+  - **PHP 8.x** – Lenguaje principal del servidor.
+  - **Laravel** – Framework MVC para la lógica de negocio, routing, middleware, colas, etc.
+  - **Eloquent ORM** – Mapeo objeto–relacional para acceso y gestión de datos.
+  - **FilamentPHP** – Plugin de administración que se integra directamente con Laravel para construir paneles y recursos sobre los modelos de Eloquent.
+  - **PHPUnit / Pruebas de Laravel** – Para pruebas automatizadas de la aplicación.
+  - **Composer** – Gestor de dependencias PHP.
 
-## Contributing
+- **Frontend (administrativo y público)**
+  - **FilamentPHP** (plugin frontend y backend a la vez)  
+    - Usa **Laravel Livewire** para componentes dinámicos sin escribir JavaScript explícito.
+    - Utiliza **Alpine.js** para interactividad ligera en el navegador.
+    - Se apoya en **Tailwind CSS** (por defecto) para estilos del panel administrativo.
+  - **Blade** – Sistema de plantillas de Laravel para vistas públicas o secciones personalizadas.
+  - **Vite** – Empaquetador y servidor de desarrollo para assets (JS, CSS).
+  - **npm** – Gestor de dependencias y scripts para el frontend.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Base de datos**
+  - Motor SQL compatible (por ejemplo **MySQL/MariaDB** o **PostgreSQL**) para el almacenamiento persistente de la información.
 
-## Code of Conduct
+- **Herramientas adicionales**
+  - **Git** para control de versiones.
+  - Entornos locales como **Docker / Laravel Sail**, **XAMPP**, **Laragon**, etc. (opcionales según preferencia).
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+En conjunto, **FilamentPHP** actúa como un puente entre el backend (Laravel/Eloquent) y el frontend (Livewire/Alpine/Tailwind), permitiendo construir rápidamente interfaces administrativas modernas sobre la lógica de negocio del sistema.
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 📌 Estado del proyecto
 
-## License
+- Rama principal de desarrollo: **`develop`**.  
+- El proyecto se encuentra en una fase inicial: se están definiendo los modelos base (por ejemplo, el modelo de Usuario) y la estructura de módulos mediante milestones e issues.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Revisa los **Issues** y **Milestones** del repositorio para conocer el estado actual de cada módulo.
+
+---
+
+## ✅ Requisitos previos
+
+Para ejecutar el proyecto en local necesitas:
+
+- **Git**
+- **PHP 8.x** (con las extensiones requeridas por Laravel)
+- **Composer**
+- **Node.js** y **npm**
+- Un motor de **base de datos** (MySQL/MariaDB, PostgreSQL, etc.)
+
+Además, debes contar con algún entorno local, por ejemplo:
+
+- Laravel Sail / Docker  
+- XAMPP, Laragon, WAMP, etc.  
+- Laravel Valet (en macOS)
+
+---
+
+## ⚙️ Instalación (entorno local)
+
+> 👀 Si vas a contribuir con cambios al repositorio, revisa primero la sección  
+> [Contribuir (vía fork)](#-contribuir-vía-fork).
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/krypton612/montesori.git
+cd montesori
+```
+ejecutar los siguientes comandos para instalar dependencias y levantar el proyecto en entorno local.
+
+## 1. Instalar dependencias de PHP
+- composer install
+
+## 2. Configurar entorno de la aplicación
+- cp .env.example .env
+- php artisan key:generate
+
+Editar el archivo .env para configurar la base de datos y otros parámetros (APP_NAME, APP_URL, etc.).
+
+## 3. Ejecutar migraciones y seeders
+- php artisan migrate
+- php artisan db:seed
+
+# o en un solo paso:
+- php artisan migrate --seed
+
+## 4. Crear enlace de almacenamiento
+- php artisan storage:link
+
+## 5. Instalar dependencias de frontend
+- npm install
+
+## 6. Compilar assets
+Modo desarrollo:
+- npm run dev
+
+Compilación para producción:
+- npm run build
+
+## 7. Levantar el servidor de Laravel
+- php artisan serve
+
+La aplicación quedará disponible, por defecto, en:
+http://localhost:8000
+
