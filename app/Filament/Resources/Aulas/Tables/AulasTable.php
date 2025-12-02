@@ -1,31 +1,33 @@
 <?php
 
-namespace App\Filament\Resources\Usuarios\Tables;
+namespace App\Filament\Resources\Aulas\Tables;
 
-use Dom\Text;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-use function Symfony\Component\Translation\t;
-
-class UsuariosTable
+class AulasTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('name')
-                    ->searchable()
+                TextColumn::make('codigo')
+                    ->searchable(),
+                TextColumn::make('numero')
+                    ->searchable(),
+                TextColumn::make('capacidad')
+                    ->numeric()
                     ->sortable(),
-                TextColumn::make('email')
-                    ->searchable()
-                    ->sortable(),
+                IconColumn::make('habilitado')
+                    ->boolean(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -39,6 +41,7 @@ class UsuariosTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

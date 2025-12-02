@@ -18,6 +18,7 @@ class Usuario extends Authenticatable implements FilamentUser
     use SoftDeletes, HasFactory, Notifiable, HasRoles;
 
     protected $table = 'users';
+    
     /**
      * The attributes that are mass assignable.
      *
@@ -52,6 +53,11 @@ class Usuario extends Authenticatable implements FilamentUser
         ];
     }
 
+    public function persona()
+    {
+        return $this->hasOne(Persona::class, 'usuario_id');
+    }
+    
     public function canAccessPanel(Panel $panel): bool
     {
         // return str_ends_with($this->email, '@yourdomain.com') && $this->hasVerifiedEmail();

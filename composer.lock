@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "352ed6ad19486a4dbaf50c29b79f4c6c",
+    "content-hash": "75952b8bc40e90b6e32e5dd3c734876d",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -2265,6 +2265,79 @@
                 }
             ],
             "time": "2025-08-22T14:27:06+00:00"
+        },
+        {
+            "name": "joaopaulolndev/filament-pdf-viewer",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/joaopaulolndev/filament-pdf-viewer.git",
+                "reference": "381c2fbbced49788a57c97a3df56782a91bb23dc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/joaopaulolndev/filament-pdf-viewer/zipball/381c2fbbced49788a57c97a3df56782a91bb23dc",
+                "reference": "381c2fbbced49788a57c97a3df56782a91bb23dc",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^4.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "nunomaduro/collision": "^7.9|^8.6",
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "pestphp/pest": "^2.1|^3.4.7",
+                "pestphp/pest-plugin-arch": "^2.0|^3.0",
+                "pestphp/pest-plugin-laravel": "^2.0|^3.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "FilamentPdfViewer": "Joaopaulolndev\\FilamentPdfViewer\\Facades\\FilamentPdfViewer"
+                    },
+                    "providers": [
+                        "Joaopaulolndev\\FilamentPdfViewer\\FilamentPdfViewerServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Joaopaulolndev\\FilamentPdfViewer\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "João Paulo Leite Nascimento",
+                    "email": "joaopauloln7@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Filament package to show pdf document viewer",
+            "homepage": "https://github.com/joaopaulolndev/filament-pdf-viewer",
+            "keywords": [
+                "filament-pdf-viewer",
+                "joaopaulolndev",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/joaopaulolndev/filament-pdf-viewer/issues",
+                "source": "https://github.com/joaopaulolndev/filament-pdf-viewer"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/joaopaulolndev",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-08-09T21:11:21+00:00"
         },
         {
             "name": "kirschbaum-development/eloquent-power-joins",
@@ -5391,6 +5464,64 @@
                 }
             ],
             "time": "2022-12-17T21:53:22+00:00"
+        },
+        {
+            "name": "secondnetwork/blade-tabler-icons",
+            "version": "v3.35.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/secondnetwork/blade-tabler-icons.git",
+                "reference": "637a4ae739daa13a27522fe91dd36f0716321616"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/secondnetwork/blade-tabler-icons/zipball/637a4ae739daa13a27522fe91dd36f0716321616",
+                "reference": "637a4ae739daa13a27522fe91dd36f0716321616",
+                "shasum": ""
+            },
+            "require": {
+                "blade-ui-kit/blade-icons": "^1.8",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^6.0|^7.0|^9.0",
+                "phpunit/phpunit": "^9.0|^10.0|^11.0|^12.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "secondnetwork\\TablerIcons\\BladeTablerIconsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "secondnetwork\\TablerIcons\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Andreas Farah"
+                }
+            ],
+            "description": "A package to easily make use of tabler-icons in your Laravel Blade views.",
+            "homepage": "https://github.com/secondnetwork/blade-tabler-icons",
+            "keywords": [
+                "blade",
+                "laravel",
+                "tabler-icons"
+            ],
+            "support": {
+                "issues": "https://github.com/secondnetwork/blade-tabler-icons/issues",
+                "source": "https://github.com/secondnetwork/blade-tabler-icons/tree/v3.35.0"
+            },
+            "time": "2025-09-18T12:39:56+00:00"
         },
         {
             "name": "spatie/invade",

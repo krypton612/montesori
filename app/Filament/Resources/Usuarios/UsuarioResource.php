@@ -15,14 +15,18 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use UnitEnum;
 
 class UsuarioResource extends Resource
 {
     protected static ?string $model = Usuario::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::UserGroup;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Seguridad';
 
     public static function form(Schema $schema): Schema
     {
