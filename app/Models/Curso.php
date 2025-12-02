@@ -58,8 +58,9 @@ class Curso extends Model
         return $this->belongsTo(Gestion::class);
     }
 
-    public function horarios()
+    public function aulas()
     {
-        return $this->hasMany(Horario::class, 'curso_id');
+        return $this->belongsToMany(Aula::class, 'horario', 'curso_id', 'aula_id')
+                    ->withPivot('dia', 'hora_inicio', 'hora_fin');
     }
 }
