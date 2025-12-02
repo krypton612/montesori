@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Persona;
+use App\Models\Profesor;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -15,6 +16,8 @@ class ProfesorFactory extends Factory
      *
      * @return array<string, mixed>
      */
+    protected $model = Profesor::class;
+    
     public function definition()
     {
         return [
