@@ -33,3 +33,5 @@ jobs:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite
       run: php artisan test
+    - name: Laravel php formatter
+      run: ./vendor/bin/pint --test
