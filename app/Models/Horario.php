@@ -22,6 +22,7 @@ class Horario extends Model
     ];
 
     // Relación con Aula
+    /*
     public function aula()
     {
         return $this->belongsTo(Aula::class, 'aula_id');
@@ -32,4 +33,5 @@ class Horario extends Model
     {
         return $this->belongsTo(Curso::class, 'curso_id');
     }
+    */
 }

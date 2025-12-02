@@ -26,8 +26,9 @@ class Aula extends Model
     ];
 
     // Relación con Horario
-    public function horarios()
+    public function cursos()
     {
-        return $this->hasMany(Horario::class, 'aula_id');
+        return $this->belongsToMany(Curso::class, 'horario', 'aula_id', 'curso_id')
+                    ->withPivot('dia', 'hora_inicio', 'hora_fin');
     }
 }
