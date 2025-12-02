@@ -22,7 +22,7 @@ class TipoDocumento extends Model
         'habilitado' => 'boolean',
     ];
 
-    // Relación con DocumentoProfesor
+    // Relación con DocumentoProfesor (uno a muchos) caso especial no necesario un pivote.
     public function documentosProfesores()
     {
         return $this->hasMany(DocumentoProfesor::class, 'tipo_documento_id');
