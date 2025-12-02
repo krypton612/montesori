@@ -55,4 +55,9 @@ class AulaTest extends TestCase
         ]);
 
     }
+
+    public function test_prueba_booleana(): void
+    {
+        $this->assertTrue(true);
+    }
 }
