@@ -18,6 +18,7 @@ class Usuario extends Authenticatable implements FilamentUser
     use SoftDeletes, HasFactory, Notifiable, HasRoles;
 
     protected $table = 'users';
+    
     /**
      * The attributes that are mass assignable.
      *

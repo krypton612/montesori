@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Filament\Resources\Aulas\Pages;
+namespace App\Filament\Resources\Profesors\Pages;
 
-use App\Filament\Resources\Aulas\AulaResource;
 use App\Filament\Resources\Profesors\ProfesorResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
+
 
 class ViewProfesor extends ViewRecord
 {

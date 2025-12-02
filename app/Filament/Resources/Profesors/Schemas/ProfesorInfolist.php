@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Aulas\Schemas;
+namespace App\Filament\Resources\Profesors\Schemas;
 
 use Filament\Infolists\Components\Group;
 use Filament\Infolists\Components\IconEntry;

@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Profesors;
 
-use App\Filament\Resources\Aulas\Pages\ViewProfesor;
-use App\Filament\Resources\Aulas\Schemas\ProfesorInfolist;
+use App\Filament\Resources\Profesors\Schemas\ProfesorInfolist;
 use App\Filament\Resources\Profesors\Pages\CreateProfesor;
 use App\Filament\Resources\Profesors\Pages\EditProfesor;
 use App\Filament\Resources\Profesors\Pages\ListProfesors;
+use App\Filament\Resources\Profesors\Pages\ViewProfesor;
 use App\Filament\Resources\Profesors\Schemas\ProfesorForm;
 use App\Filament\Resources\Profesors\Tables\ProfesorsTable;
 use App\Models\Profesor;
