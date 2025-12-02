@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Turno extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'turno';
 
@@ -34,6 +35,6 @@ class Turno extends Model
     // Relación con Curso
     public function cursos()
     {
-        return $this->hasMany(Curso::class, 'turno_id');    
+        return $this->hasMany(Curso::class, 'turno_id');
     }
 }
