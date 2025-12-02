@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Horario extends Model
 {
+    use HasFactory;
     protected $table = 'horario';
 
     protected $fillable = [
@@ -34,4 +36,13 @@ class Horario extends Model
         return $this->belongsTo(Curso::class, 'curso_id');
     }
     */
+    public function aula()
+    {
+        return $this->belongsTo(Aula::class);
+    }
+
+    public function curso()
+    {
+        return $this->belongsTo(Curso::class);
+    }
 }
