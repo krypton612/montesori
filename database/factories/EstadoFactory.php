@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Estado;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -14,6 +15,8 @@ class EstadoFactory extends Factory
      *
      * @return array<string, mixed>
      */
+
+    protected $model = Estado::class;
 
     public function definition(): array
     {
