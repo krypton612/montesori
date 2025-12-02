@@ -33,11 +33,11 @@ class Discapacidad extends Model
     {
         return $this->belongsTo(TipoDiscapacidad::class, 'tipo_discapacidad_id');
     }
-
-    public function estudiantes()
-    {
-        // asumiendo modelo Estudiante en App\Models\Estudiante
-        return $this->belongsToMany(Estudiante::class, 'discapacidad_estudiante')
-            ->withTimestamps();
-    }
+    /**se trabajara solo cuando se necesite el modelo Estudiante */
+    // public function estudiantes()
+    // {
+    //     // asumiendo modelo Estudiante en App\Models\Estudiante
+    //     return $this->belongsToMany(Estudiante::class, 'discapacidad_estudiante')
+    //         ->withTimestamps();
+    // }
 }
