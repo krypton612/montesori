@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
@@ -20,11 +21,15 @@ class AulasTable
         return $table
             ->columns([
                 TextColumn::make('codigo')
+                    ->badge()
+                    ->icon(Heroicon::OutlinedTag)
                     ->searchable(),
                 TextColumn::make('numero')
                     ->searchable(),
                 TextColumn::make('capacidad')
+                    ->icon(Heroicon::OutlinedUserGroup)
                     ->numeric()
+                    ->prefix("TOTAL-")
                     ->sortable(),
                 IconColumn::make('habilitado')
                     ->boolean(),
