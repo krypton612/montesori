@@ -6,11 +6,14 @@ use App\Filament\Resources\Cursos\Pages\CreateCurso;
 use App\Filament\Resources\Cursos\Pages\EditCurso;
 use App\Filament\Resources\Cursos\Pages\ListCursos;
 use App\Filament\Resources\Cursos\Pages\ViewCurso;
+use App\Filament\Resources\Cursos\RelationManagers\AulasRelationManager;
+use App\Filament\Resources\Cursos\RelationManagers\HorariosRelationManager;
 use App\Filament\Resources\Cursos\Schemas\CursoForm;
 use App\Filament\Resources\Cursos\Schemas\CursoInfolist;
 use App\Filament\Resources\Cursos\Tables\CursosTable;
 use App\Models\Curso;
 use BackedEnum;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -22,7 +25,9 @@ class CursoResource extends Resource
 {
     protected static ?string $model = Curso::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
+
+    protected static string | BackedEnum | null $activeNavigationIcon = Heroicon::AcademicCap;
 
     protected static ?string $recordTitleAttribute = 'seccion';
 
@@ -44,7 +49,7 @@ class CursoResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            HorariosRelationManager::class
         ];
     }
 

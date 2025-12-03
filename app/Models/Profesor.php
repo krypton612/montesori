@@ -44,4 +44,10 @@ class Profesor extends Model
     {
         return $this->hasMany(Curso::class, 'profesor_id');
     }
+
+    public function getNombreCompletoAttribute()
+    {
+        return trim($this->persona->nombre . ' ' . $this->persona->apellido_pat . ' ' . $this->persona->apellido_mat);
+    }
+
 }

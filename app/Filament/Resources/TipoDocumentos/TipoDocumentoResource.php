@@ -22,6 +22,9 @@ class TipoDocumentoResource extends Resource
     protected static ?string $model = TipoDocumento::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentMagnifyingGlass;
+
+    protected static string | BackedEnum | null $activeNavigationIcon = Heroicon::DocumentMagnifyingGlass;
+
     protected static string|UnitEnum|null $navigationGroup = 'Parametros';
 
     protected static ?string $recordTitleAttribute = 'nombre';

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Cursos\Schemas;
 
+use App\Models\Gestion;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -36,6 +37,11 @@ class CursoForm
                                         Select::make('gestion_id')
                                             ->label('Gestión')
                                             ->relationship('gestion', 'nombre')
+                                            ->default(function () {
+                                                $currentYear = date('Y');
+                                                $gestion = Gestion::where('nombre', $currentYear)->first();
+                                                return $gestion ? $gestion->id : null;
+                                            })
                                             ->required()
                                             ->searchable()
                                             ->preload()
@@ -210,7 +216,8 @@ class CursoForm
                                     ->schema([
                                         Select::make('estado_id')
                                             ->label('Estado')
-                                            ->relationship('estado', 'nombre')
+                                            ->relationship('estado', 'nombre', fn ($query) => $query->where('tipo', "cursos"))
+
                                             ->native(false)
                                             ->searchable()
                                             ->preload()
