@@ -68,6 +68,7 @@ class MallasRelationManager extends RelationManager
         return $schema
             ->components([
                 TextEntry::make('anio')
+                    ->label("Año")
                     ->icon(Heroicon::OutlinedCalendarDays)
                     ->numeric()
                     ->placeholder('-'),
