@@ -175,6 +175,76 @@ Este documento presenta un análisis técnico del repositorio **Emanuel Montesor
 
 ---
 
+## 🧪 Pruebas de Estrés y Carga
+
+Se han implementado pruebas de estrés y carga para evaluar el rendimiento del sistema bajo condiciones de alta demanda.
+
+### Archivos de Pruebas
+
+| Archivo | Descripción |
+|---------|-------------|
+| `tests/Stress/DatabaseStressTest.php` | Pruebas de rendimiento de base de datos |
+| `tests/Stress/HttpLoadTest.php` | Pruebas de carga HTTP |
+| `tests/Stress/MemoryStressTest.php` | Pruebas de consumo de memoria |
+| `tests/Stress/ModelPerformanceTest.php` | Pruebas de rendimiento de modelos |
+
+### Tipos de Pruebas Implementadas
+
+#### 1. Pruebas de Base de Datos (`DatabaseStressTest`)
+- Inserción masiva de registros (100-500 registros)
+- Consultas complejas con múltiples JOINs
+- Transacciones concurrentes
+- Actualización y eliminación masiva
+- Prevención de N+1 queries
+- Paginación bajo carga
+
+#### 2. Pruebas de Carga HTTP (`HttpLoadTest`)
+- Carga en página principal (100 solicitudes)
+- Carga en panel de login
+- Solicitudes mixtas a múltiples rutas
+- Ráfagas de solicitudes
+- Análisis de percentiles de latencia (P50, P90, P95, P99)
+
+#### 3. Pruebas de Memoria (`MemoryStressTest`)
+- Consumo de memoria en creación masiva
+- Liberación de memoria después de consultas
+- Detección de fugas de memoria
+- Picos de memoria sostenidos
+
+#### 4. Pruebas de Rendimiento de Modelos (`ModelPerformanceTest`)
+- Atributos calculados (accessors)
+- Casteos de atributos
+- Búsquedas con LIKE
+- Ordenamiento
+- Relaciones múltiples
+- Chunking y lazy collections
+
+### Cómo Ejecutar las Pruebas
+
+```bash
+# Ejecutar todas las pruebas de estrés
+php artisan test --testsuite=Stress
+
+# Ejecutar un archivo específico
+php artisan test tests/Stress/DatabaseStressTest.php
+
+# Ejecutar con grupo específico
+php artisan test --group=stress
+
+# Ver métricas detalladas
+php artisan test --testsuite=Stress -v
+```
+
+### Métricas Monitoreadas
+
+- **Tiempo de ejecución**: Segundos/milisegundos por operación
+- **Throughput**: Operaciones por segundo
+- **Memoria**: MB utilizados y pico de memoria
+- **Latencia**: P50, P90, P95, P99
+- **Queries**: Número de consultas SQL ejecutadas
+
+---
+
 ## ✨ Conclusión
 
 El proyecto **Emanuel Montesori** tiene una **base sólida y bien estructurada** utilizando tecnologías modernas. Los principales puntos fuertes son la arquitectura modular con FilamentPHP, el sistema de seguridad robusto con Shield, y la buena cobertura de modelos y factories.
@@ -186,6 +256,9 @@ Las áreas de mejora más importantes se centran en:
 
 El proyecto está en una **fase de desarrollo activo** y tiene buenas prácticas establecidas que facilitarán su escalamiento y mantenimiento futuro.
 
+**Actualización**: Se han agregado pruebas de estrés y carga para evaluar el rendimiento del sistema bajo condiciones de alta demanda.
+
 ---
 
 *Análisis generado el: 3 de diciembre de 2025*
+*Actualizado el: 3 de diciembre de 2025 - Agregadas pruebas de estrés y carga*
