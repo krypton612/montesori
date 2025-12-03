@@ -60,4 +60,19 @@ class AulaTest extends TestCase
     {
         $this->assertTrue(true);
     }
+
+    public function test_eliminar_aul_softdeletes(): void
+    {
+        $aula = Aula::factory()->create();
+        $aulaId = $aula->id;
+
+        $aula->delete();
+
+        $this->assertSoftDeleted('aula', [
+            'id' => $aulaId,
+        ]);
+
+        // Verifica que aún existe con trashed
+        $this->assertNotNull(Aula::withTrashed()->find($aulaId));
+    }
 }

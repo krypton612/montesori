@@ -12,6 +12,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -60,7 +61,9 @@ class InformaticaPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make('Gestion Personas')
-                ->icon('heroicon-o-circle-stack'),
+                    ->icon('heroicon-o-circle-stack'),
+                NavigationGroup::make('Gestion Academica')
+                    ->icon(Heroicon::OutlinedAcademicCap),
             ])
             ->renderHook(PanelsRenderHook::SIDEBAR_NAV_START, fn () => view('filament.components.navigation-filter'))
             ->authMiddleware([

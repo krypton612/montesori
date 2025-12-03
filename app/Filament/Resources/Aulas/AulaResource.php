@@ -22,9 +22,10 @@ class AulaResource extends Resource
 {
     protected static ?string $model = Aula::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'nombre';
+
+    protected static string|null|\UnitEnum $navigationGroup = 'Gestion Academica';
 
     public static function form(Schema $schema): Schema
     {
