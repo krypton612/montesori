@@ -44,6 +44,11 @@ class Estudiante extends Model
     public function persona()
     {
         return $this->belongsTo(Persona::class, 'persona_id');
+    } 
+
+    public function discapacidades()
+    {
+        return $this->HasMany(DiscapacidadEstudiante::class, 'estudiante_id');
     }
 
     /**
