@@ -37,4 +37,19 @@ class Evaluacion extends Model
     {
         return $this->belongsTo(TipoEvaluacion::class, 'tipo_evaluacion_id');
     }
+
+    public function curso()
+    {
+        return $this->belongsTo(Curso::class, 'curso_id');
+    }
+
+    public function estado()
+    {
+        return $this->belongsTo(Estado::class, 'estado_id');
+    }
+
+    public function gestion()
+    {
+        return $this->belongsTo(Gestion::class, 'gestion_id');
+    }
 }
