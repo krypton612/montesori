@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('gestion', function (Blueprint $table) {
+        Schema::create('tipo_evaluacion', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
-            $table->date('fecha_inicio')->nullable();
-            $table->date('fecha_fin')->nullable();
-            $table->boolean('habilitado')->default(false);
+            $table->string('nombre')->unique();
+            $table->text('descripcion')->nullable();
+            $table->boolean('es_formativa')->default(false);
+            $table->boolean('es_sumativa')->default(false);
+            $table->boolean('visible')->default(true);
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('gestion');
+        Schema::dropIfExists('tipo_evaluacion');
     }
 };
