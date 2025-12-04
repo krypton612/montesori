@@ -38,4 +38,9 @@ class Estado extends Model
     {
         return $this->hasMany(Curso::class, 'estado_id');
     }
+
+    public function evaluaciones()
+    {
+        return $this->hasMany(Evaluacion::class, 'estado_id');
+    }
 }

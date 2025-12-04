@@ -17,7 +17,7 @@ return new class extends Migration
             $table->integer('cupo_maximo');
             $table->integer('cupo_minimo');
             $table->integer('cupo_actual')->default(0);
-            
+
             $table->unsignedBigInteger('profesor_id')->nullable();
             $table->foreign('profesor_id')->references('id')->on('profesor')->onDelete('set null');
 
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->foreign('gestion_id')->references('id')->on('gestion')->onDelete('set null');
 
             $table->boolean('habilitado')->default(true);
-            
+
 
             $table->timestamps();
             $table->softDeletes();
