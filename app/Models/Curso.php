@@ -68,4 +68,14 @@ class Curso extends Model
     {
         return $this->hasMany(Horario::class);
     }
+
+    public function evaluaciones()
+    {
+        return $this->hasMany(Evaluacion::class);
+    }
+
+    public function tipos_evaluacion()
+    {
+        return $this->belongsToMany(TipoEvaluacion::class, 'evaluacion', 'curso_id', 'tipo_evaluacion_id');
+    }
 }

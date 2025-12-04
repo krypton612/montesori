@@ -18,7 +18,13 @@ class TipoEvaluacionResource extends Resource
 {
     protected static ?string $model = TipoEvaluacion::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
+
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::BookOpen;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Parametros';
+
+    protected static ?string $navigationLabel = 'Tipo Evaluaciones';
 
     protected static ?string $recordTitleAttribute = 'nombre';
 

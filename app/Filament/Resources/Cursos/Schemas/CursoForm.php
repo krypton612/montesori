@@ -2,7 +2,11 @@
 
 namespace App\Filament\Resources\Cursos\Schemas;
 
+use App\Models\Curso;
+use App\Models\Estado;
+use App\Models\Evaluacion;
 use App\Models\Gestion;
+use App\Models\TipoEvaluacion;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -10,6 +14,7 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Model;
 
 class CursoForm
 {
@@ -116,6 +121,21 @@ class CursoForm
                                             ->placeholder('Seleccione un profesor')
                                             ->helperText('Docente encargado de impartir la materia')
                                             ->columnSpanFull(),
+                                        Select::make('tipo_evaluacion')
+                                            ->label('Tipo de Evaluaciones')
+
+                                            ->options(function () {
+                                                return TipoEvaluacion::query()
+                                                    ->orderBy('nombre')
+                                                    ->pluck('nombre', 'id')
+                                                    ->toArray();
+                                            })
+                                            ->multiple()
+                                            ->native(false)
+                                            ->searchable()
+                                            ->preload()
+                                            ->placeholder('Seleccione tipos de evaluaciones')
+                                            ->helperText('Tipos de evaluaciones aplicables para este curso, recordar que segun estos parametros se va a generar el plan de evaluaciones'),
                                     ])
                                     ->columns(1),
                             ]),
@@ -231,4 +251,5 @@ class CursoForm
                     ->contained(false),
             ]);
     }
+
 }
