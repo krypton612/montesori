@@ -29,8 +29,6 @@ return new class extends Migration
             // Descripción u observación de la discapacidad
             $table->text('observacion')->nullable();
 
-            $table->softDeletes(); // deleted_at (soft delete)
-
             // created_at y updated_at
             $table->timestamps();
         });
