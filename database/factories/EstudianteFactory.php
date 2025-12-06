@@ -2,29 +2,58 @@
 
 namespace Database\Factories;
 
+use App\Models\Estudiante;
 use App\Models\Persona;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Tests\Feature\Models\PersonaTest;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Estudiantes>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Estudiante>
  */
 class EstudianteFactory extends Factory
 {
     /**
-     * Define the model's default state.
+     * El modelo asociado a este factory.
+     *
+     * @var class-string<\App\Models\Estudiante>
+     */
+    protected $model = Estudiante::class;
+
+    /**
+     * Define el estado por defecto del modelo.
      *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
         return [
-            'persona_id' => Persona::factory()->create(),
-            'codigo_saga' => $this->faker->unique()->numerify('SAGA#######'),
-            'estado_academico' => $this->faker->randomElement(['activo', 'inactivo', 'graduado', 'suspendido']),
-            'tiene_discapacidad' => $this->faker->boolean(20), // 20% de probabilidad de ser true
-            'observaciones' => $this->faker->optional()->paragraph(),
-            'foto_url' => $this->faker->optional()->imageUrl(200, 200, 'people'),
+            // Relación obligatoria: cada Estudiante necesita una Persona
+            'persona_id'         => Persona::factory(),
+
+            // Campos propios
+            'codigo_saga'        => $this->faker->optional()->bothify('SAGA-####'),
+            'estado_academico'   => $this->faker->randomElement([
+                'regular',
+                'becado',
+                'retirado',
+                'egresado',
+            ]),
+            'tiene_discapacidad' => $this->faker->boolean(20), // ~20% true
+            'observaciones'      => $this->faker->optional()->sentence(),
+            'foto_url'           => $this->faker->optional()->imageUrl(400, 400, 'people', true),
+
+            // Soft delete
+            'deleted_at'         => null,
         ];
+    }
+
+    /**
+     * Estado para un estudiante "eliminado" (soft deleted).
+     */
+    public function trashed(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'deleted_at' => now(),
+        ]);
     }
 }

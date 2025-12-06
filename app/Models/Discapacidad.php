@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\TipoDiscapacidad;
+use App\Models\Estudiante;
+use App\Models\DiscapacidadEstudiante;
 
 class Discapacidad extends Model
 {
@@ -23,21 +26,25 @@ class Discapacidad extends Model
     ];
 
     protected $casts = [
-        'requiere_acompaniante' => 'boolean',
-        'necesita_equipo_especial' => 'boolean',
+        'requiere_acompaniante'        => 'boolean',
+        'necesita_equipo_especial'     => 'boolean',
         'requiere_adaptacion_curricular' => 'boolean',
-        'visible' => 'boolean',
+        'visible'                      => 'boolean',
     ];
 
     public function tipoDiscapacidad()
     {
         return $this->belongsTo(TipoDiscapacidad::class, 'tipo_discapacidad_id');
     }
-    /**se trabajara solo cuando se necesite el modelo Estudiante */
-    // public function estudiantes()
-    // {
-    //     // asumiendo modelo Estudiante en App\Models\Estudiante
-    //     return $this->belongsToMany(Estudiante::class, 'discapacidad_estudiante')
-    //         ->withTimestamps();
-    // }
+
+    /**
+     * Relación N:N con Estudiante usando la tabla pivote discapacidad_estudiante
+     */
+    public function estudiantes()
+    {
+        return $this->belongsToMany(Estudiante::class, 'discapacidad_estudiante')
+            ->using(DiscapacidadEstudiante::class)
+            ->withPivot('observacion')
+            ->withTimestamps();
+    }
 }
