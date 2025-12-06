@@ -48,7 +48,18 @@ class Estudiante extends Model
 
     public function discapacidades()
     {
-        return $this->HasMany(DiscapacidadEstudiante::class, 'estudiante_id');
+        return $this->belongsToMany(Discapacidad::class, 'discapacidad_estudiante')
+            ->using(DiscapacidadEstudiante::class) // usa el modelo pivote custom
+            ->withPivot('observacion')
+            ->withTimestamps();
+    }
+
+    /**
+     * (Opcional) Si quieres acceder directamente a las filas de la pivote:
+     */
+    public function discapacidadesPivot()
+    {
+        return $this->hasMany(DiscapacidadEstudiante::class, 'estudiante_id');
     }
 
     /**
