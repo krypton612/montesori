@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Apoderado;
 
 class Estudiante extends Model
 {
@@ -62,20 +63,10 @@ class Estudiante extends Model
         return $this->hasMany(DiscapacidadEstudiante::class, 'estudiante_id');
     }
 
-    /**
-     * Relación N a N con Apoderado a través de la tabla pivote estudiante_apoderado.
-     *
-     * NOTA: De acuerdo a lo que hablamos antes:
-     * si el modelo Apoderado aún no existe (issue #10),
-     * dejamos el método comentado para no forzar su implementación todavía.
-     */
-
-    // use App\Models\Apoderado; // TODO: descomentar cuando se cree el modelo Apoderado (#10)
-
-    // public function apoderados()
-    // {
-    //     return $this->belongsToMany(\App\Models\Apoderado::class, 'estudiante_apoderado')
-    //         ->withPivot(['parentestco', 'vive_con_el', 'es_principal'])
-    //         ->withTimestamps();
-    // }
+    public function apoderados()
+    {
+        return $this->belongsToMany(Apoderado::class, 'estudiante_apoderado')
+            ->withPivot(['parentestco', 'vive_con_el', 'es_principal'])
+            ->withTimestamps();
+    }
 }
