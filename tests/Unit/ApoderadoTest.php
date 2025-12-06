@@ -4,6 +4,7 @@ namespace Tests\Feature\Models;
 
 use App\Models\Apoderado;
 use App\Models\Persona;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -46,6 +47,17 @@ class ApoderadoTest extends TestCase
     }
 
     /** @test */
+    public function persona_id_es_obligatorio_a_nivel_bd()
+    {
+        $this->expectException(QueryException::class);
+
+        Apoderado::create([
+            // 'persona_id' => null, // NOT NULL en BD
+            'ocupacion'       => 'Profesor',
+        ]);
+    }
+
+    /** @test */
     public function configuracion_basica_del_modelo_es_correcta()
     {
         $model = new Apoderado();
@@ -65,6 +77,8 @@ class ApoderadoTest extends TestCase
 
         $this->assertArrayHasKey('persona_id', $casts);
         $this->assertEquals('integer', $casts['persona_id']);
+        $this->assertArrayHasKey('deleted_at', $casts);
+        $this->assertEquals('datetime', $casts['deleted_at']);
     }
 
     /** @test */
@@ -110,5 +124,34 @@ class ApoderadoTest extends TestCase
         ]);
 
         $this->assertNull($apoderado->fresh()->deleted_at);
+    }
+
+    /** @test */
+    public function factory_puede_crear_apoderado_soft_deleted_con_estado_trashed()
+    {
+        $apoderado = Apoderado::factory()->trashed()->create();
+
+        $this->assertNotNull($apoderado->deleted_at);
+
+        $this->assertSoftDeleted('apoderado', [
+            'id' => $apoderado->id,
+        ]);
+    }
+
+    /** @test */
+    public function apoderados_soft_deleted_no_aparecen_en_consultas_por_defecto()
+    {
+        $activo    = Apoderado::factory()->create();
+        $eliminado = Apoderado::factory()->trashed()->create();
+
+        $todos = Apoderado::all();
+
+        $this->assertTrue($todos->contains($activo));
+        $this->assertFalse($todos->contains($eliminado));
+
+        $soloTrashed = Apoderado::onlyTrashed()->get();
+
+        $this->assertTrue($soloTrashed->contains($eliminado));
+        $this->assertFalse($soloTrashed->contains($activo));
     }
 }
