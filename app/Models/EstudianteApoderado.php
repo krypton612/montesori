@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Estudiante;
+use App\Models\Apoderado;
 
 class EstudianteApoderado extends Model
 {
@@ -25,6 +27,17 @@ class EstudianteApoderado extends Model
         'vive_con_el'   => 'boolean',
         'es_principal'  => 'boolean',
     ];
+
+    public function estudiante()
+    {
+        return $this->belongsTo(Estudiante::class, 'estudiante_id');
+    }
+
+    public function apoderado()
+    {
+        return $this->belongsTo(Apoderado::class, 'apoderado_id');
+    }
+
 
     // Tabla pivote: sin relaciones aquí, se manejan con belongsToMany en Estudiante y Apoderado.
 }
