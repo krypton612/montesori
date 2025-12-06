@@ -21,18 +21,6 @@ class DiscapacidadEstudianteFactory extends Factory
             'discapacidad_id' => Discapacidad::factory(),
             'estudiante_id'   => Estudiante::factory(),
             'observacion'     => $this->faker->optional()->sentence(),
-            // SoftDelete: por defecto null
-            'deleted_at'      => null,
         ];
-    }
-
-    /**
-     * Estado para registros "eliminados" (soft delete).
-     */
-    public function trashed(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'deleted_at' => now(),
-        ]);
     }
 }
