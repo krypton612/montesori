@@ -21,6 +21,8 @@ class EstadoResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedExclamationTriangle;
 
+    protected static string|null|BackedEnum $activeNavigationIcon = Heroicon::ExclamationTriangle;
+
     protected static string|UnitEnum|null $navigationGroup = 'Parametros';
 
 

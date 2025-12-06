@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Estudiante;
 use App\Models\Persona;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Tests\Feature\Models\PersonaTest;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Estudiante>
