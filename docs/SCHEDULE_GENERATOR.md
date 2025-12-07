@@ -90,6 +90,23 @@ Para cada curso (en orden de prioridad):
 
 **Nota**: Este algoritmo puede no encontrar la solución óptima en todos los casos, pero garantiza que todas las restricciones duras se respeten y que la distribución sea equitativa.
 
+**Ejemplo de distribución**:
+
+```
+ANTES (Lineal - Incorrecto):
+Curso con 10 horas semanales:
+- Lunes 08:00-09:00, 09:00-10:00, 10:00-11:00, 11:00-12:00, 12:00-13:00
+- Martes 08:00-09:00, 09:00-10:00, 10:00-11:00, 11:00-12:00, 12:00-13:00
+
+AHORA (Distribuido - Correcto):
+Curso con 10 horas semanales:
+- Lunes 08:00-09:00, 09:00-10:00
+- Martes 08:00-09:00, 09:00-10:00
+- Miércoles 08:00-09:00, 09:00-10:00
+- Jueves 08:00-09:00, 09:00-10:00
+- Viernes 08:00-09:00, 09:00-10:00
+```
+
 #### 6. **Escalabilidad**
 
 Para un ejemplo típico:
