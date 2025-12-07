@@ -2,42 +2,42 @@
 
 namespace App\Services;
 
-use App\Models\Curso;
 use App\Models\Aula;
+use App\Models\Curso;
 use App\Models\Horario;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
  * ScheduleGeneratorService
- * 
+ *
  * Servicio aislado para generación y reorganización de horarios académicos.
- * 
+ *
  * ## Tipo de Problema: NP-Completo (Constraint Satisfaction Problem - CSP)
- * 
+ *
  * La asignación de horarios es un problema de satisfacción de restricciones (CSP)
  * que pertenece a la clase de complejidad NP-Completo. Esto significa que:
- * 
+ *
  * 1. **Complejidad Computacional**: No existe un algoritmo conocido que pueda
  *    resolver el problema en tiempo polinomial para todos los casos.
- * 
+ *
  * 2. **Restricciones Duras (Hard Constraints)**:
  *    - Un profesor no puede estar en dos lugares al mismo tiempo
  *    - Un aula no puede albergar dos cursos simultáneamente
  *    - Los horarios deben respetar la capacidad del aula
- * 
+ *
  * 3. **Restricciones Blandas (Soft Constraints)**:
  *    - Distribuir equitativamente las horas semanales
  *    - Minimizar ventanas horarias para profesores
  *    - Preferencias de horarios
- * 
- * 4. **Enfoque de Solución**: 
+ *
+ * 4. **Enfoque de Solución**:
  *    Este servicio utiliza un algoritmo heurístico con backtracking que:
  *    - Intenta asignar horarios uno por uno
  *    - Verifica restricciones en cada paso
  *    - Retrocede si encuentra conflictos irresolubles
  *    - Puede no encontrar solución óptima en todos los casos
- * 
+ *
  * 5. **Escalabilidad**: La complejidad crece exponencialmente con:
  *    - Número de cursos
  *    - Número de aulas
@@ -50,7 +50,7 @@ class ScheduleGeneratorService
      * Días de la semana disponibles para asignación
      */
     private const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
-    
+
     /**
      * Bloques de tiempo disponibles (formato 24h)
      */
@@ -68,16 +68,16 @@ class ScheduleGeneratorService
 
     /**
      * Genera horarios para un conjunto de cursos
-     * 
-     * @param Collection|array $cursos Colección de cursos para asignar
-     * @param array $options Opciones de configuración
+     *
+     * @param  Collection|array  $cursos  Colección de cursos para asignar
+     * @param  array  $options  Opciones de configuración
      * @return array ['success' => bool, 'schedules' => array, 'conflicts' => array]
      */
     public function generateSchedules($cursos, array $options = []): array
     {
         $cursos = $cursos instanceof Collection ? $cursos : collect($cursos);
         $aulas = Aula::where('habilitado', true)->get();
-        
+
         if ($aulas->isEmpty()) {
             return [
                 'success' => false,
@@ -91,7 +91,7 @@ class ScheduleGeneratorService
 
         foreach ($cursos as $curso) {
             $cursoSchedules = $this->generateScheduleForCourse($curso, $aulas, $generatedSchedules);
-            
+
             if (empty($cursoSchedules)) {
                 $conflicts[] = "No se pudo generar horario para curso ID {$curso->id} - {$curso->materia->nombre}";
             } else {
@@ -108,11 +108,8 @@ class ScheduleGeneratorService
 
     /**
      * Genera horario para un curso específico
-     * 
-     * @param Curso $curso
-     * @param Collection $aulas
-     * @param array $existingSchedules Horarios ya asignados
-     * @return array
+     *
+     * @param  array  $existingSchedules  Horarios ya asignados
      */
     private function generateScheduleForCourse(Curso $curso, Collection $aulas, array $existingSchedules): array
     {
@@ -159,14 +156,6 @@ class ScheduleGeneratorService
 
     /**
      * Encuentra un aula disponible para el bloque horario especificado
-     * 
-     * @param Collection $aulas
-     * @param string $dia
-     * @param string $horaInicio
-     * @param string $horaFin
-     * @param Curso $curso
-     * @param array $existingSchedules
-     * @return Aula|null
      */
     private function findAvailableAula(
         Collection $aulas,
@@ -183,7 +172,7 @@ class ScheduleGeneratorService
             }
 
             // Verificar que no haya conflictos
-            if (!$this->hasConflict($aula->id, $curso, $dia, $horaInicio, $horaFin, $existingSchedules)) {
+            if (! $this->hasConflict($aula->id, $curso, $dia, $horaInicio, $horaFin, $existingSchedules)) {
                 return $aula;
             }
         }
@@ -193,13 +182,7 @@ class ScheduleGeneratorService
 
     /**
      * Verifica si existe un conflicto para la asignación propuesta
-     * 
-     * @param int $aulaId
-     * @param Curso $curso
-     * @param string $dia
-     * @param string $horaInicio
-     * @param string $horaFin
-     * @param array $existingSchedules
+     *
      * @return bool true si hay conflicto, false si está libre
      */
     private function hasConflict(
@@ -217,7 +200,7 @@ class ScheduleGeneratorService
             }
 
             // Verificar solapamiento de horas
-            if (!$this->horariosOverlap($horaInicio, $horaFin, $schedule['hora_inicio'], $schedule['hora_fin'])) {
+            if (! $this->horariosOverlap($horaInicio, $horaFin, $schedule['hora_inicio'], $schedule['hora_fin'])) {
                 continue;
             }
 
@@ -240,24 +223,16 @@ class ScheduleGeneratorService
 
     /**
      * Verifica si dos horarios se solapan
-     * 
-     * @param string $inicio1
-     * @param string $fin1
-     * @param string $inicio2
-     * @param string $fin2
-     * @return bool
      */
     private function horariosOverlap(string $inicio1, string $fin1, string $inicio2, string $fin2): bool
     {
-        return !($fin1 <= $inicio2 || $inicio1 >= $fin2);
+        return ! ($fin1 <= $inicio2 || $inicio1 >= $fin2);
     }
 
     /**
      * Aplica los horarios generados a la base de datos
-     * 
-     * @param array $schedules
-     * @param bool $clearExisting Si debe eliminar horarios existentes
-     * @return bool
+     *
+     * @param  bool  $clearExisting  Si debe eliminar horarios existentes
      */
     public function applySchedules(array $schedules, bool $clearExisting = false): bool
     {
@@ -267,7 +242,7 @@ class ScheduleGeneratorService
             if ($clearExisting) {
                 // Obtener IDs de cursos afectados
                 $cursoIds = array_unique(array_column($schedules, 'curso_id'));
-                
+
                 // Eliminar horarios existentes de estos cursos
                 Horario::whereIn('curso_id', $cursoIds)->delete();
             }
@@ -278,24 +253,26 @@ class ScheduleGeneratorService
             }
 
             DB::commit();
+
             return true;
         } catch (\Exception $e) {
-            \Log::error('Error applying schedules: ' . $e->getMessage());
+            \Log::error('Error applying schedules: '.$e->getMessage());
             DB::rollBack();
+
             return false;
         }
     }
 
     /**
      * Valida horarios existentes y detecta conflictos
-     * 
-     * @param int|null $gestionId ID de gestión para filtrar cursos (opcional)
+     *
+     * @param  int|null  $gestionId  ID de gestión para filtrar cursos (opcional)
      * @return array ['conflicts' => array, 'statistics' => array]
      */
     public function validateExistingSchedules(?int $gestionId = null): array
     {
         $query = Horario::with(['curso.profesor', 'aula']);
-        
+
         if ($gestionId) {
             $query->whereHas('curso', function ($q) use ($gestionId) {
                 $q->where('gestion_id', $gestionId);
@@ -321,7 +298,7 @@ class ScheduleGeneratorService
                     continue;
                 }
 
-                if (!$this->horariosOverlap(
+                if (! $this->horariosOverlap(
                     $horario1->hora_inicio,
                     $horario1->hora_fin,
                     $horario2->hora_inicio,
@@ -360,9 +337,8 @@ class ScheduleGeneratorService
 
     /**
      * Reorganiza horarios existentes optimizando la distribución
-     * 
-     * @param array $cursoIds IDs de cursos a reorganizar
-     * @return array
+     *
+     * @param  array  $cursoIds  IDs de cursos a reorganizar
      */
     public function reorganizeSchedules(array $cursoIds): array
     {

@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Services\ScheduleGeneratorService;
 use App\Models\Curso;
+use App\Services\ScheduleGeneratorService;
+use Illuminate\Console\Command;
 
 class GenerateSchedulesCommand extends Command
 {
@@ -78,6 +78,7 @@ class GenerateSchedulesCommand extends Command
 
         if (empty($result['conflicts'])) {
             $this->info('✅ No se encontraron conflictos en los horarios.');
+
             return Command::SUCCESS;
         }
 
@@ -101,6 +102,7 @@ class GenerateSchedulesCommand extends Command
 
         if (empty($cursoIds)) {
             $this->error('❌ Debe especificar al menos un curso para reorganizar (--curso=ID)');
+
             return Command::FAILURE;
         }
 
@@ -125,6 +127,7 @@ class GenerateSchedulesCommand extends Command
 
         if ($cursos->isEmpty()) {
             $this->error('❌ No se encontraron cursos para procesar.');
+
             return Command::FAILURE;
         }
 
@@ -162,7 +165,7 @@ class GenerateSchedulesCommand extends Command
      */
     private function displayAndApplyResults(array $result): int
     {
-        if (!$result['success'] || !empty($result['conflicts'])) {
+        if (! $result['success'] || ! empty($result['conflicts'])) {
             $this->warn('⚠️  Se encontraron conflictos durante la generación:');
             $this->newLine();
 
@@ -176,6 +179,7 @@ class GenerateSchedulesCommand extends Command
 
         if ($totalSchedules === 0) {
             $this->error('❌ No se pudieron generar horarios.');
+
             return Command::FAILURE;
         }
 
@@ -192,9 +196,11 @@ class GenerateSchedulesCommand extends Command
 
                 if ($applied) {
                     $this->info('✅ Horarios aplicados exitosamente a la base de datos.');
+
                     return Command::SUCCESS;
                 } else {
                     $this->error('❌ Error al aplicar los horarios a la base de datos.');
+
                     return Command::FAILURE;
                 }
             }

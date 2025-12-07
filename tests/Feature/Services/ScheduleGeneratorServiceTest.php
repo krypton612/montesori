@@ -2,14 +2,13 @@
 
 namespace Tests\Feature\Services;
 
-use Tests\TestCase;
-use App\Services\ScheduleGeneratorService;
-use App\Models\Curso;
 use App\Models\Aula;
+use App\Models\Curso;
 use App\Models\Horario;
 use App\Models\Materia;
-use App\Models\Profesor;
+use App\Services\ScheduleGeneratorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class ScheduleGeneratorServiceTest extends TestCase
 {
@@ -20,7 +19,7 @@ class ScheduleGeneratorServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ScheduleGeneratorService();
+        $this->service = new ScheduleGeneratorService;
     }
 
     /**
@@ -61,11 +60,11 @@ class ScheduleGeneratorServiceTest extends TestCase
     {
         // Crear aulas
         Aula::factory()->count(3)->create(['capacidad' => 30, 'habilitado' => true]);
-        
+
         // Crear materias y cursos
         $materias = Materia::factory()->count(3)->create(['horas_semanales' => 3]);
         $cursos = collect();
-        
+
         foreach ($materias as $materia) {
             $cursos->push(Curso::factory()->create([
                 'materia_id' => $materia->id,
@@ -120,10 +119,10 @@ class ScheduleGeneratorServiceTest extends TestCase
         $applied = $this->service->applySchedules($result['schedules']);
 
         $this->assertTrue($applied);
-        
+
         // Verificar que se guardaron en la base de datos
         $this->assertEquals(2, Horario::count());
-        
+
         $firstSchedule = $result['schedules'][0];
         $this->assertDatabaseHas('horario', [
             'curso_id' => $firstSchedule['curso_id'],
