@@ -34,6 +34,7 @@ Estas restricciones **DEBEN** ser satisfechas:
 - ❌ Un aula no puede albergar dos cursos simultáneamente
 - ❌ Los horarios deben respetar la capacidad del aula
 - ❌ Las horas deben estar dentro de los bloques horarios definidos
+- ❌ Los cursos deben respetar su turno asignado (mañana o tarde)
 
 #### 3. **Restricciones Blandas (Soft Constraints)**
 Estas restricciones son **deseables** pero no obligatorias:
@@ -239,18 +240,27 @@ Por defecto, el generador trabaja con:
 
 ### Bloques Horarios
 
-Bloques de tiempo predefinidos:
+El generador tiene diferentes bloques horarios según el turno:
+
+**Turno Mañana:**
 ```php
 ['08:00', '09:00'],
 ['09:00', '10:00'],
 ['10:00', '11:00'],
 ['11:00', '12:00'],
 ['12:00', '13:00'],
+```
+
+**Turno Tarde:**
+```php
 ['14:00', '15:00'],
 ['15:00', '16:00'],
 ['16:00', '17:00'],
 ['17:00', '18:00'],
+['18:00', '19:00'],
 ```
+
+El servicio detecta automáticamente el turno del curso (mañana o tarde) basándose en el modelo `Turno` asociado al curso. Si un curso tiene turno de "Mañana", solo se le asignarán horarios de mañana. Si tiene turno de "Tarde", solo horarios de tarde. Si no tiene turno asignado, puede usar cualquier bloque horario.
 
 Estos valores están definidos como constantes en la clase `ScheduleGeneratorService` y pueden ser modificados según las necesidades de la institución.
 
@@ -276,6 +286,9 @@ php artisan test --filter test_generates_schedules_for_single_course
 - ✅ Validación de horarios existentes
 - ✅ Aplicación de horarios a la base de datos
 - ✅ Reorganización de horarios
+- ✅ Respeto del turno de mañana
+- ✅ Respeto del turno de tarde
+- ✅ Separación de cursos por turno
 
 ## 📁 Estructura de Archivos
 

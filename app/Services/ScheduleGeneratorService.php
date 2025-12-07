@@ -52,18 +52,25 @@ class ScheduleGeneratorService
     private const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
     /**
-     * Bloques de tiempo disponibles (formato 24h)
+     * Bloques de tiempo disponibles para turno mañana (formato 24h)
      */
-    private const BLOQUES_HORARIOS = [
+    private const BLOQUES_HORARIOS_MANANA = [
         ['08:00', '09:00'],
         ['09:00', '10:00'],
         ['10:00', '11:00'],
         ['11:00', '12:00'],
         ['12:00', '13:00'],
+    ];
+
+    /**
+     * Bloques de tiempo disponibles para turno tarde (formato 24h)
+     */
+    private const BLOQUES_HORARIOS_TARDE = [
         ['14:00', '15:00'],
         ['15:00', '16:00'],
         ['16:00', '17:00'],
         ['17:00', '18:00'],
+        ['18:00', '19:00'],
     ];
 
     /**
@@ -76,6 +83,19 @@ class ScheduleGeneratorService
     public function generateSchedules($cursos, array $options = []): array
     {
         $cursos = $cursos instanceof Collection ? $cursos : collect($cursos);
+
+        // Si es una colección de Eloquent, cargar relaciones necesarias
+        if (method_exists($cursos, 'loadMissing')) {
+            $cursos->loadMissing(['materia', 'turno', 'profesor']);
+        } else {
+            // Si es una colección regular, cargar manualmente cada curso
+            $cursos = $cursos->map(function ($curso) {
+                $curso->load(['materia', 'turno', 'profesor']);
+
+                return $curso;
+            });
+        }
+
         $aulas = Aula::where('habilitado', true)->get();
 
         if ($aulas->isEmpty()) {
@@ -117,13 +137,16 @@ class ScheduleGeneratorService
         $schedules = [];
         $horasAsignadas = 0;
 
+        // Determinar bloques horarios según el turno del curso
+        $bloquesHorarios = $this->getBloquesHorariosPorTurno($curso);
+
         // Intentar asignar las horas necesarias
         foreach (self::DIAS_SEMANA as $dia) {
             if ($horasAsignadas >= $horasNecesarias) {
                 break;
             }
 
-            foreach (self::BLOQUES_HORARIOS as $bloque) {
+            foreach ($bloquesHorarios as $bloque) {
                 if ($horasAsignadas >= $horasNecesarias) {
                     break;
                 }
@@ -152,6 +175,29 @@ class ScheduleGeneratorService
         }
 
         return $schedules;
+    }
+
+    /**
+     * Obtiene los bloques horarios apropiados según el turno del curso
+     */
+    private function getBloquesHorariosPorTurno(Curso $curso): array
+    {
+        // Si el curso no tiene turno asignado, usar todos los bloques
+        if (! $curso->turno) {
+            return array_merge(self::BLOQUES_HORARIOS_MANANA, self::BLOQUES_HORARIOS_TARDE);
+        }
+
+        $turnoNombre = strtolower($curso->turno->nombre);
+
+        // Detectar si es turno de mañana o tarde
+        if (str_contains($turnoNombre, 'mañana') || str_contains($turnoNombre, 'manana')) {
+            return self::BLOQUES_HORARIOS_MANANA;
+        } elseif (str_contains($turnoNombre, 'tarde')) {
+            return self::BLOQUES_HORARIOS_TARDE;
+        }
+
+        // Si no se puede determinar, usar todos los bloques
+        return array_merge(self::BLOQUES_HORARIOS_MANANA, self::BLOQUES_HORARIOS_TARDE);
     }
 
     /**

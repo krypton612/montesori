@@ -142,7 +142,7 @@ class ScheduleGeneratorServiceTest extends TestCase
         $curso2 = Curso::factory()->create();
 
         // Crear conflicto intencional: misma aula, mismo horario
-        Horario::create([
+        Horario::factory()->create([
             'curso_id' => $curso1->id,
             'aula_id' => $aula->id,
             'dia' => 'Lunes',
@@ -150,7 +150,7 @@ class ScheduleGeneratorServiceTest extends TestCase
             'hora_fin' => '10:00',
         ]);
 
-        Horario::create([
+        Horario::factory()->create([
             'curso_id' => $curso2->id,
             'aula_id' => $aula->id,
             'dia' => 'Lunes',
@@ -178,7 +178,7 @@ class ScheduleGeneratorServiceTest extends TestCase
         $curso2 = Curso::factory()->create();
 
         // Horarios en diferentes aulas
-        Horario::create([
+        Horario::factory()->create([
             'curso_id' => $curso1->id,
             'aula_id' => $aula1->id,
             'dia' => 'Lunes',
@@ -186,7 +186,7 @@ class ScheduleGeneratorServiceTest extends TestCase
             'hora_fin' => '10:00',
         ]);
 
-        Horario::create([
+        Horario::factory()->create([
             'curso_id' => $curso2->id,
             'aula_id' => $aula2->id,
             'dia' => 'Lunes',
@@ -201,5 +201,139 @@ class ScheduleGeneratorServiceTest extends TestCase
         $this->assertEmpty($result['conflicts']);
         $this->assertEquals(0, $result['statistics']['classroom_conflicts']);
         $this->assertEquals(0, $result['statistics']['professor_conflicts']);
+    }
+
+    /**
+     * Test: Respeta el turno de mañana asignando solo horarios de mañana
+     */
+    public function test_respects_morning_shift(): void
+    {
+        // Crear turno de mañana
+        $turnoManana = \App\Models\Turno::factory()->create([
+            'nombre' => 'Mañana',
+            'hora_inicio' => '08:00',
+            'hora_fin' => '13:00',
+            'habilitado' => true,
+        ]);
+
+        // Crear aula y materia
+        $aula = Aula::factory()->create(['capacidad' => 30, 'habilitado' => true]);
+        $materia = Materia::factory()->create(['horas_semanales' => 3]);
+
+        // Crear curso con turno de mañana
+        $curso = Curso::factory()->create([
+            'materia_id' => $materia->id,
+            'turno_id' => $turnoManana->id,
+            'cupo_actual' => 20,
+        ]);
+
+        // Generar horarios
+        $result = $this->service->generateSchedules(collect([$curso]));
+
+        // Assertions
+        $this->assertTrue($result['success']);
+        $this->assertCount(3, $result['schedules']);
+
+        // Verificar que todos los horarios están en turno de mañana (antes de 14:00)
+        foreach ($result['schedules'] as $schedule) {
+            $horaInicio = \Carbon\Carbon::parse($schedule['hora_inicio']);
+            $this->assertLessThan(14, $horaInicio->hour, 'El horario debe estar en turno de mañana');
+        }
+    }
+
+    /**
+     * Test: Respeta el turno de tarde asignando solo horarios de tarde
+     */
+    public function test_respects_afternoon_shift(): void
+    {
+        // Crear turno de tarde
+        $turnoTarde = \App\Models\Turno::factory()->create([
+            'nombre' => 'Tarde',
+            'hora_inicio' => '14:00',
+            'hora_fin' => '19:00',
+            'habilitado' => true,
+        ]);
+
+        // Crear aula y materia
+        $aula = Aula::factory()->create(['capacidad' => 30, 'habilitado' => true]);
+        $materia = Materia::factory()->create(['horas_semanales' => 3]);
+
+        // Crear curso con turno de tarde
+        $curso = Curso::factory()->create([
+            'materia_id' => $materia->id,
+            'turno_id' => $turnoTarde->id,
+            'cupo_actual' => 20,
+        ]);
+
+        // Generar horarios
+        $result = $this->service->generateSchedules(collect([$curso]));
+
+        // Assertions
+        $this->assertTrue($result['success']);
+        $this->assertCount(3, $result['schedules']);
+
+        // Verificar que todos los horarios están en turno de tarde (14:00 o después)
+        foreach ($result['schedules'] as $schedule) {
+            $horaInicio = \Carbon\Carbon::parse($schedule['hora_inicio']);
+            $this->assertGreaterThanOrEqual(14, $horaInicio->hour, 'El horario debe estar en turno de tarde');
+        }
+    }
+
+    /**
+     * Test: Cursos de diferentes turnos no interfieren entre sí
+     */
+    public function test_different_shifts_do_not_interfere(): void
+    {
+        // Crear turnos
+        $turnoManana = \App\Models\Turno::factory()->create([
+            'nombre' => 'Mañana',
+            'hora_inicio' => '08:00',
+            'hora_fin' => '13:00',
+            'habilitado' => true,
+        ]);
+
+        $turnoTarde = \App\Models\Turno::factory()->create([
+            'nombre' => 'Tarde',
+            'hora_inicio' => '14:00',
+            'hora_fin' => '19:00',
+            'habilitado' => true,
+        ]);
+
+        // Crear aulas
+        Aula::factory()->count(2)->create(['capacidad' => 30, 'habilitado' => true]);
+
+        // Crear materias
+        $materia1 = Materia::factory()->create(['horas_semanales' => 4]);
+        $materia2 = Materia::factory()->create(['horas_semanales' => 4]);
+
+        // Crear cursos en diferentes turnos
+        $cursoManana = Curso::factory()->create([
+            'materia_id' => $materia1->id,
+            'turno_id' => $turnoManana->id,
+            'cupo_actual' => 20,
+        ]);
+
+        $cursoTarde = Curso::factory()->create([
+            'materia_id' => $materia2->id,
+            'turno_id' => $turnoTarde->id,
+            'cupo_actual' => 20,
+        ]);
+
+        // Generar horarios para ambos cursos
+        $result = $this->service->generateSchedules(collect([$cursoManana, $cursoTarde]));
+
+        // Assertions
+        $this->assertTrue($result['success']);
+        $this->assertCount(8, $result['schedules']); // 4 + 4 horas
+
+        // Verificar separación de turnos
+        $schedulesByTurno = collect($result['schedules'])->groupBy(function ($schedule) {
+            $hora = \Carbon\Carbon::parse($schedule['hora_inicio'])->hour;
+
+            return $hora < 14 ? 'manana' : 'tarde';
+        });
+
+        $this->assertCount(4, $schedulesByTurno['manana'] ?? []);
+        $this->assertCount(4, $schedulesByTurno['tarde'] ?? []);
     }
 }
