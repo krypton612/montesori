@@ -43,6 +43,10 @@ use Illuminate\Support\Facades\DB;
  *    - Número de aulas
  *    - Número de franjas horarias
  *    - Número de días disponibles
+ * 6. **Restriccciones del Servicio**: Los cursos deben cumplir reglas específicas
+ *    - Horarios predefinidos (turnos de mañana y tarde) 2 horas semanales mínimo y 6 máximo
+ *    - Prioridad en asignación basada en horas semanales
+ *    -
  */
 class ScheduleGeneratorService
 {

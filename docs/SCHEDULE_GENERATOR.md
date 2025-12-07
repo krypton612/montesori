@@ -320,6 +320,18 @@ php artisan test --filter ScheduleGeneratorServiceTest
 php artisan test --filter test_generates_schedules_for_single_course
 ```
 
+## Condiciones de Prueba
+El rendimiento del generador depende del número de aulas disponibles. A continuación se muestra una tabla con la capacidad máxima aproximada de cursos que se pueden generar por turno (mañana o tarde) según el número de aulas:
+
+| Aulas   | Máx. cursos por turno (promedio 4h) |
+| ------- | ----------------------------------- |
+| 2 aulas | 12 cursos                           |
+| 4 aulas | 25 cursos                           |
+| 5 aulas | 31 cursos                           |
+| 6 aulas | 37 cursos                           |
+| 8 aulas | 50 cursos                           |
+
+
 ### Cobertura de Pruebas
 
 - ✅ Generación de horarios para un curso
