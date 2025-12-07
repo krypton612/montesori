@@ -338,4 +338,83 @@ class ScheduleGeneratorServiceTest extends TestCase
         $this->assertCount(4, $schedulesByTurno['manana'] ?? []);
         $this->assertCount(4, $schedulesByTurno['tarde'] ?? []);
     }
+
+    /**
+     * Test: Las clases se distribuyen a lo largo de la semana, no linealmente
+     */
+    public function test_schedules_are_distributed_across_week(): void
+    {
+        // Crear aulas y materia
+        Aula::factory()->count(3)->create(['capacidad' => 30, 'habilitado' => true]);
+        $materia = Materia::factory()->create(['horas_semanales' => 6]);
+        $curso = Curso::factory()->create([
+            'materia_id' => $materia->id,
+            'cupo_actual' => 20,
+        ]);
+
+        // Generar horarios
+        $result = $this->service->generateSchedules(collect([$curso]));
+
+        // Assertions
+        $this->assertTrue($result['success']);
+        $this->assertCount(6, $result['schedules']);
+
+        // Verificar que hay clases en al menos 2 días diferentes
+        $diasConClases = collect($result['schedules'])
+            ->pluck('dia')
+            ->unique()
+            ->count();
+
+        $this->assertGreaterThanOrEqual(2, $diasConClases, 'Las clases deben estar distribuidas en al menos 2 días');
+
+        // Verificar que no todas las clases están en el mismo día
+        $clasesEnUnSoloDia = collect($result['schedules'])
+            ->groupBy('dia')
+            ->max(fn ($clases) => count($clases));
+
+        $this->assertLessThan(6, $clasesEnUnSoloDia, 'No todas las clases deben estar en el mismo día');
+    }
+
+    /**
+     * Test: Materias con más de 4 horas semanales reciben prioridad en primeras horas
+     */
+    public function test_high_priority_subjects_get_early_hours(): void
+    {
+        // Crear turno de mañana
+        $turnoManana = Turno::factory()->create([
+            'nombre' => 'Mañana',
+            'hora_inicio' => '08:00',
+            'hora_fin' => '13:00',
+            'habilitado' => true,
+        ]);
+
+        // Crear aulas
+        Aula::factory()->count(2)->create(['capacidad' => 30, 'habilitado' => true]);
+
+        // Crear materia prioritaria (más de 4 horas)
+        $materiaPrioritaria = Materia::factory()->create(['horas_semanales' => 5]);
+        $cursoPrioritario = Curso::factory()->create([
+            'materia_id' => $materiaPrioritaria->id,
+            'turno_id' => $turnoManana->id,
+            'cupo_actual' => 20,
+        ]);
+
+        // Generar horarios
+        $result = $this->service->generateSchedules(collect([$cursoPrioritario]));
+
+        // Assertions
+        $this->assertTrue($result['success']);
+        $this->assertCount(5, $result['schedules']);
+
+        // Verificar que al menos algunas clases están en las primeras horas (08:00-10:00)
+        $clasesEnPrimerasHoras = collect($result['schedules'])
+            ->filter(function ($schedule) {
+                $hora = Carbon::parse($schedule['hora_inicio'])->hour;
+
+                return $hora >= 8 && $hora < 10;
+            })
+            ->count();
+
+        $this->assertGreaterThan(0, $clasesEnPrimerasHoras, 'Las materias prioritarias deben tener algunas clases en las primeras horas');
+    }
 }

@@ -96,6 +96,11 @@ class ScheduleGeneratorService
             });
         }
 
+        // Ordenar cursos por prioridad: materias con más horas semanales primero
+        $cursos = $cursos->sortByDesc(function ($curso) {
+            return $curso->materia->horas_semanales ?? 0;
+        })->values();
+
         $aulas = Aula::where('habilitado', true)->get();
 
         if ($aulas->isEmpty()) {
@@ -140,14 +145,52 @@ class ScheduleGeneratorService
         // Determinar bloques horarios según el turno del curso
         $bloquesHorarios = $this->getBloquesHorariosPorTurno($curso);
 
-        // Intentar asignar las horas necesarias
+        // Determinar si es materia prioritaria (más de 4 horas semanales)
+        $esPrioritaria = $horasNecesarias > 4;
+
+        // Si es prioritaria, ordenar bloques para dar prioridad a las primeras horas
+        if ($esPrioritaria) {
+            // Ya están ordenados por defecto (08:00, 09:00, etc.)
+        } else {
+            // Para materias no prioritarias, podemos usar cualquier hora
+            // No necesitamos reordenar
+        }
+
+        // Crear matriz de slots disponibles: [día][bloque] = disponible
+        $slotsDisponibles = $this->crearMatrizSlots($bloquesHorarios);
+
+        // Intentar distribuir las horas equitativamente a lo largo de la semana
+        $horasPorDia = [];
+        $diasDisponibles = count(self::DIAS_SEMANA);
+        $horasPorDiaIdeal = ceil($horasNecesarias / $diasDisponibles);
+
+        // Distribuir las horas de manera equitativa
+        foreach (self::DIAS_SEMANA as $diaIndex => $dia) {
+            $horasPorDia[$dia] = min($horasPorDiaIdeal, $horasNecesarias - $horasAsignadas);
+            if ($horasPorDia[$dia] <= 0) {
+                break;
+            }
+        }
+
+        // Asignar horarios priorizando distribución y prioridad
         foreach (self::DIAS_SEMANA as $dia) {
             if ($horasAsignadas >= $horasNecesarias) {
                 break;
             }
 
-            foreach ($bloquesHorarios as $bloque) {
-                if ($horasAsignadas >= $horasNecesarias) {
+            $horasAsignadasEnDia = 0;
+            $maxHorasPorDia = $horasPorDia[$dia] ?? 0;
+
+            if ($maxHorasPorDia <= 0) {
+                continue;
+            }
+
+            // Para materias prioritarias, comenzar desde las primeras horas
+            // Para materias no prioritarias, podemos usar cualquier hora
+            $bloquesAUsar = $esPrioritaria ? $bloquesHorarios : $bloquesHorarios;
+
+            foreach ($bloquesAUsar as $bloque) {
+                if ($horasAsignadas >= $horasNecesarias || $horasAsignadasEnDia >= $maxHorasPorDia) {
                     break;
                 }
 
@@ -170,11 +213,28 @@ class ScheduleGeneratorService
                         'hora_fin' => $bloque[1],
                     ];
                     $horasAsignadas++;
+                    $horasAsignadasEnDia++;
                 }
             }
         }
 
         return $schedules;
+    }
+
+    /**
+     * Crea una matriz de slots disponibles para facilitar la asignación
+     */
+    private function crearMatrizSlots(array $bloquesHorarios): array
+    {
+        $matriz = [];
+        foreach (self::DIAS_SEMANA as $dia) {
+            $matriz[$dia] = [];
+            foreach ($bloquesHorarios as $index => $bloque) {
+                $matriz[$dia][$index] = true; // Inicialmente todos disponibles
+            }
+        }
+
+        return $matriz;
     }
 
     /**

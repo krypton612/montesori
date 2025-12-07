@@ -35,6 +35,7 @@ Estas restricciones **DEBEN** ser satisfechas:
 - ❌ Los horarios deben respetar la capacidad del aula
 - ❌ Las horas deben estar dentro de los bloques horarios definidos
 - ❌ Los cursos deben respetar su turno asignado (mañana o tarde)
+- ✅ Distribución equitativa de clases a lo largo de la semana (no lineal)
 
 #### 3. **Restricciones Blandas (Soft Constraints)**
 Estas restricciones son **deseables** pero no obligatorias:
@@ -43,30 +44,53 @@ Estas restricciones son **deseables** pero no obligatorias:
 - ⚠️ Respetar preferencias de horarios
 - ⚠️ Agrupar materias relacionadas
 
-#### 4. **Enfoque de Solución**
+#### 4. **Sistema de Prioridades**
+El algoritmo prioriza las materias según su carga horaria:
+- **Materias prioritarias** (horas_semanales > 4): Se asignan primero y reciben las primeras horas del turno
+  - Turno mañana: 08:00-09:00, 09:00-10:00, etc.
+  - Turno tarde: 14:00-15:00, 15:00-16:00, etc.
+- **Materias regulares** (horas_semanales ≤ 4): Se asignan después en cualquier hora disponible del turno
 
-El servicio implementa un **algoritmo heurístico con backtracking**:
+Este sistema garantiza que las materias más importantes tengan los mejores horarios.
+
+#### 5. **Enfoque de Solución**
+
+El servicio implementa un **algoritmo heurístico con backtracking y distribución equitativa**:
 
 ```
-Para cada curso:
+1. Ordenar cursos por prioridad (materias con más horas semanales primero)
+
+Para cada curso (en orden de prioridad):
+    Calcular distribución ideal: horas / días de la semana
+    
     Para cada día de la semana:
-        Para cada bloque horario:
+        Asignar hasta N horas por día (distribución equitativa)
+        
+        Para cada bloque horario (según prioridad de materia):
             Buscar aula disponible
             Verificar restricciones:
                 - ¿Profesor libre?
                 - ¿Aula libre?
                 - ¿Capacidad suficiente?
+                - ¿Turno correcto?
             Si todas las restricciones se cumplen:
                 Asignar horario
             Si no:
                 Continuar buscando
+    
     Si no se pueden asignar todas las horas:
         Reportar conflicto
 ```
 
-**Nota**: Este algoritmo puede no encontrar la solución óptima en todos los casos, pero garantiza que todas las restricciones duras se respeten.
+**Características del algoritmo:**
+- **Distribución no lineal**: Las clases se reparten equitativamente entre los días de la semana
+- **Sistema de prioridades**: Las materias con más horas semanales se procesan primero
+- **Asignación por bloques**: No se llenan todos los bloques de un día antes de pasar al siguiente
+- **Respeto de turnos**: Mañana (08:00-13:00) y tarde (14:00-19:00) separados
 
-#### 5. **Escalabilidad**
+**Nota**: Este algoritmo puede no encontrar la solución óptima en todos los casos, pero garantiza que todas las restricciones duras se respeten y que la distribución sea equitativa.
+
+#### 6. **Escalabilidad**
 
 Para un ejemplo típico:
 - 20 cursos
@@ -292,6 +316,8 @@ php artisan test --filter test_generates_schedules_for_single_course
 - ✅ Respeto del turno de mañana
 - ✅ Respeto del turno de tarde
 - ✅ Separación de cursos por turno
+- ✅ Distribución equitativa a lo largo de la semana
+- ✅ Sistema de prioridades para materias importantes
 
 ## 📁 Estructura de Archivos
 
