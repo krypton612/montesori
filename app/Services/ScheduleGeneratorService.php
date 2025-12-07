@@ -187,17 +187,16 @@ class ScheduleGeneratorService
             return array_merge(self::BLOQUES_HORARIOS_MANANA, self::BLOQUES_HORARIOS_TARDE);
         }
 
-        $turnoNombre = strtolower($curso->turno->nombre);
+        // Determinar turno basado en hora_inicio
+        $horaInicio = \Carbon\Carbon::parse($curso->turno->hora_inicio);
 
-        // Detectar si es turno de mañana o tarde
-        if (str_contains($turnoNombre, 'mañana') || str_contains($turnoNombre, 'manana')) {
+        // Si comienza antes de las 14:00, es turno de mañana
+        if ($horaInicio->hour < 14) {
             return self::BLOQUES_HORARIOS_MANANA;
-        } elseif (str_contains($turnoNombre, 'tarde')) {
-            return self::BLOQUES_HORARIOS_TARDE;
         }
 
-        // Si no se puede determinar, usar todos los bloques
-        return array_merge(self::BLOQUES_HORARIOS_MANANA, self::BLOQUES_HORARIOS_TARDE);
+        // Si comienza a las 14:00 o después, es turno de tarde
+        return self::BLOQUES_HORARIOS_TARDE;
     }
 
     /**

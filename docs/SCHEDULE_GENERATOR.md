@@ -260,7 +260,10 @@ El generador tiene diferentes bloques horarios según el turno:
 ['18:00', '19:00'],
 ```
 
-El servicio detecta automáticamente el turno del curso (mañana o tarde) basándose en el modelo `Turno` asociado al curso. Si un curso tiene turno de "Mañana", solo se le asignarán horarios de mañana. Si tiene turno de "Tarde", solo horarios de tarde. Si no tiene turno asignado, puede usar cualquier bloque horario.
+El servicio detecta automáticamente el turno del curso basándose en el campo `hora_inicio` del modelo `Turno`:
+- Si `hora_inicio` es antes de las 14:00, se considera turno de mañana
+- Si `hora_inicio` es a las 14:00 o después, se considera turno de tarde
+- Si el curso no tiene turno asignado, puede usar cualquier bloque horario
 
 Estos valores están definidos como constantes en la clase `ScheduleGeneratorService` y pueden ser modificados según las necesidades de la institución.
 

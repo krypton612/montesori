@@ -6,7 +6,9 @@ use App\Models\Aula;
 use App\Models\Curso;
 use App\Models\Horario;
 use App\Models\Materia;
+use App\Models\Turno;
 use App\Services\ScheduleGeneratorService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -209,7 +211,7 @@ class ScheduleGeneratorServiceTest extends TestCase
     public function test_respects_morning_shift(): void
     {
         // Crear turno de mañana
-        $turnoManana = \App\Models\Turno::factory()->create([
+        $turnoManana = Turno::factory()->create([
             'nombre' => 'Mañana',
             'hora_inicio' => '08:00',
             'hora_fin' => '13:00',
@@ -236,7 +238,7 @@ class ScheduleGeneratorServiceTest extends TestCase
 
         // Verificar que todos los horarios están en turno de mañana (antes de 14:00)
         foreach ($result['schedules'] as $schedule) {
-            $horaInicio = \Carbon\Carbon::parse($schedule['hora_inicio']);
+            $horaInicio = Carbon::parse($schedule['hora_inicio']);
             $this->assertLessThan(14, $horaInicio->hour, 'El horario debe estar en turno de mañana');
         }
     }
@@ -247,7 +249,7 @@ class ScheduleGeneratorServiceTest extends TestCase
     public function test_respects_afternoon_shift(): void
     {
         // Crear turno de tarde
-        $turnoTarde = \App\Models\Turno::factory()->create([
+        $turnoTarde = Turno::factory()->create([
             'nombre' => 'Tarde',
             'hora_inicio' => '14:00',
             'hora_fin' => '19:00',
@@ -274,7 +276,7 @@ class ScheduleGeneratorServiceTest extends TestCase
 
         // Verificar que todos los horarios están en turno de tarde (14:00 o después)
         foreach ($result['schedules'] as $schedule) {
-            $horaInicio = \Carbon\Carbon::parse($schedule['hora_inicio']);
+            $horaInicio = Carbon::parse($schedule['hora_inicio']);
             $this->assertGreaterThanOrEqual(14, $horaInicio->hour, 'El horario debe estar en turno de tarde');
         }
     }
@@ -285,14 +287,14 @@ class ScheduleGeneratorServiceTest extends TestCase
     public function test_different_shifts_do_not_interfere(): void
     {
         // Crear turnos
-        $turnoManana = \App\Models\Turno::factory()->create([
+        $turnoManana = Turno::factory()->create([
             'nombre' => 'Mañana',
             'hora_inicio' => '08:00',
             'hora_fin' => '13:00',
             'habilitado' => true,
         ]);
 
-        $turnoTarde = \App\Models\Turno::factory()->create([
+        $turnoTarde = Turno::factory()->create([
             'nombre' => 'Tarde',
             'hora_inicio' => '14:00',
             'hora_fin' => '19:00',
@@ -328,7 +330,7 @@ class ScheduleGeneratorServiceTest extends TestCase
 
         // Verificar separación de turnos
         $schedulesByTurno = collect($result['schedules'])->groupBy(function ($schedule) {
-            $hora = \Carbon\Carbon::parse($schedule['hora_inicio'])->hour;
+            $hora = Carbon::parse($schedule['hora_inicio'])->hour;
 
             return $hora < 14 ? 'manana' : 'tarde';
         });
