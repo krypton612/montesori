@@ -23,4 +23,11 @@ class Grupo extends Model
         'habilitado' => 'boolean',
         'condiciones' => 'array',
     ];
+
+    function cursos()
+    {
+        return $this->belongsToMany(Curso::class, 'curso_grupo', 'grupo_id', 'curso_id');
+    }
+
+
 }
