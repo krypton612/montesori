@@ -48,13 +48,13 @@ class ProfesorsTable
                                 if (!$record->persona) {
                                     return 'Sin persona asociada';
                                 }
-                                
+
                                 $nombre = $record->persona->nombre ?? '';
                                 $apellidoPat = $record->persona->apellido_pat ?? '';
                                 $apellidoMat = $record->persona->apellido_mat ?? '';
-                                
+
                                 $nombreCompleto = trim("$nombre $apellidoPat $apellidoMat");
-                                
+
                                 return $nombreCompleto ?: 'Nombre no disponible';
                             }),
 
@@ -101,10 +101,10 @@ class ProfesorsTable
                             ->trueColor('success')
                             ->falseColor('danger')
                             ->sortable(),
-                            
+
                             ])
 
-                        
+
                     ->space(2),
                 ]),
 
@@ -116,7 +116,7 @@ class ProfesorsTable
                     ->searchable()
                     ->toggleable(),
 
-                
+
 
                 TextColumn::make('persona.telefono_principal')
                     ->label('Teléfono')
@@ -132,13 +132,13 @@ class ProfesorsTable
                     ->color(fn ($state) => $state > 0 ? 'success' : 'warning')
                     ->icon('heroicon-o-document-text')
                     ->alignCenter()
-                    ->tooltip(fn ($state) => $state > 0 
-                        ? "{$state} documento(s) adjunto(s)" 
+                    ->tooltip(fn ($state) => $state > 0
+                        ? "{$state} documento(s) adjunto(s)"
                         : 'Sin documentos'
                     )
                     ->toggleable(),
 
-                
+
 
                 TextColumn::make('created_at')
                     ->label('Registrado')
@@ -219,6 +219,7 @@ class ProfesorsTable
             ->striped()
             ->emptyStateHeading('No hay profesores registrados')
             ->emptyStateDescription('Comienza agregando un nuevo profesor al sistema')
+            ->deferLoading()
             ->emptyStateIcon('heroicon-o-academic-cap');
     }
 }

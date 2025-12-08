@@ -165,6 +165,8 @@ class PersonasTable
             ->striped()
             ->emptyStateHeading('No hay personas registradas')
             ->emptyStateDescription('Comienza agregando una nueva persona al sistema')
-            ->emptyStateIcon('heroicon-o-user-group');
+            ->emptyStateIcon('heroicon-o-user-group')
+            ->deferLoading()
+            ;
     }
 }

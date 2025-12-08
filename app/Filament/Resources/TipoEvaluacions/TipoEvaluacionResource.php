@@ -53,4 +53,6 @@ class TipoEvaluacionResource extends Resource
             'edit' => EditTipoEvaluacion::route('/{record}/edit'),
         ];
     }
+
+
 }

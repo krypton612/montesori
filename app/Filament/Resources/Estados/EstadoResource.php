@@ -53,4 +53,6 @@ class EstadoResource extends Resource
             'edit' => EditEstado::route('/{record}/edit'),
         ];
     }
+
+
 }

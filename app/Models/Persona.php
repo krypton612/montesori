@@ -46,5 +46,15 @@ class Persona extends Model
     {
         return $this->hasOne(Profesor::class, 'persona_id');
     }
+
+    public function estudiante()
+    {
+        return $this->hasOne(Estudiante::class, 'persona_id');
+    }
+
+    public function getNombreCompletoAttribute()
+    {
+        return "{$this->nombre} {$this->apellido_pat} {$this->apellido_mat}";
+    }
 }
 

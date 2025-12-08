@@ -31,6 +31,7 @@ class InformaticaPanelProvider extends PanelProvider
             ->default()
             ->id('informatica')
             ->path('informatica')
+            ->spa()
             ->login()
             ->colors([
                 'primary' => Color::Amber,
@@ -64,6 +65,8 @@ class InformaticaPanelProvider extends PanelProvider
                     ->icon('heroicon-o-circle-stack'),
                 NavigationGroup::make('Gestion Academica')
                     ->icon(Heroicon::OutlinedAcademicCap),
+                NavigationGroup::make('Seguridad'),
+                NavigationGroup::make('Parametros')
             ])
             ->renderHook(PanelsRenderHook::SIDEBAR_NAV_START, fn () => view('filament.components.navigation-filter'))
             ->authMiddleware([

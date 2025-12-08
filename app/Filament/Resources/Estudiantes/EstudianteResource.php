@@ -17,12 +17,13 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use UnitEnum;
 
 class EstudianteResource extends Resource
 {
     protected static ?string $model = Estudiante::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string | UnitEnum | null $navigationGroup = 'Gestion Personas';
 
     protected static ?string $recordTitleAttribute = 'codigo_saga';
 
