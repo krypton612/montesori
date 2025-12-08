@@ -29,4 +29,9 @@ class Gestion extends Model
     {
         return $this->hasMany(Curso::class, 'gestion_id');
     }
+
+    public function grupo()
+    {
+        return $this->hasMany(Grupo::class, 'gestion_id');
+    }
 }
