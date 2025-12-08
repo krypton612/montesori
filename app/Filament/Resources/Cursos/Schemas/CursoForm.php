@@ -6,6 +6,7 @@ use App\Models\Curso;
 use App\Models\Estado;
 use App\Models\Evaluacion;
 use App\Models\Gestion;
+use App\Models\Profesor;
 use App\Models\TipoEvaluacion;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -105,7 +106,7 @@ class CursoForm
                                             )
                                             ->searchable()
                                             ->getSearchResultsUsing(function (string $search) {
-                                                return \App\Models\Profesor::whereHas('persona', function ($query) use ($search) {
+                                                return Profesor::whereHas('persona', function ($query) use ($search) {
                                                     $query->where('nombre', 'ilike', "%{$search}%")
                                                         ->orWhere('apellido_pat', 'ilike', "%{$search}%")
                                                         ->orWhere('apellido_mat', 'ilike', "%{$search}%");
