@@ -37,4 +37,5 @@ class Materia extends Model
     {
         return $this->hasMany(Curso::class, 'materia_id');
     }
+
 }
