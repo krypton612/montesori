@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Materias\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -27,6 +28,13 @@ class MateriaForm
                     ->prefixIcon(Heroicon::OutlinedClock)
                     ->numeric(),
                 Textarea::make('descripcion')->minLength(100),
+                Select::make('grado')
+                    ->options([
+                        'PEDAGOGIA' => 'Pedagogía',
+                        'PRIMARIA' => 'Primaria',
+                        'SECUNDARIA' => 'Secundaria',
+                    ])
+                    ->required(),
                 Toggle::make('habilitado')
                     ->required(),
             ]);
