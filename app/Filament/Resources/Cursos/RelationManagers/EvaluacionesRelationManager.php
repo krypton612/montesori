@@ -37,24 +37,39 @@ class EvaluacionesRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('titulo')
                     ->searchable(),
+                TextColumn::make('tipoEvaluacion.nombre')
+                    ->label('Tipo de Evaluación')
+                    ->searchable(),
+                TextColumn::make('fecha_inicio')
+                    ->date(),
+                TextColumn::make('fecha_fin')
+                    ->date(),
+                TextColumn::make('estado.nombre')
+                    ->label('Estado')
+                    ->searchable(),
+                TextColumn::make('gestion.nombre')
+                    ->label('Gestión')
+                    ->searchable(),
             ])
             ->filters([
                 //
             ])
             ->headerActions([
-                CreateAction::make(),
-                AssociateAction::make(),
+
             ])
             ->recordActions([
-                EditAction::make(),
-                DissociateAction::make(),
-                DeleteAction::make(),
+
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DissociateBulkAction::make(),
-                    DeleteBulkAction::make(),
-                ]),
+
             ]);
     }
+
+    protected function getListeners(): array
+    {
+        return [
+            'parentUpdated' => 'mount',
+        ];
+    }
+
 }

@@ -11,6 +11,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Schema;
@@ -121,9 +123,10 @@ class CursoForm
                                             ->placeholder('Seleccione un profesor')
                                             ->helperText('Docente encargado de impartir la materia')
                                             ->columnSpanFull(),
-                                        Select::make('tipo_evaluacion')
-                                            ->label('Tipo de Evaluaciones')
 
+                                        // CAMPO CORREGIDO: Ahora carga y guarda correctamente
+                                        Select::make('tipos_evaluacion')
+                                            ->label('Tipo de Evaluaciones')
                                             ->options(function () {
                                                 return TipoEvaluacion::query()
                                                     ->orderBy('nombre')
@@ -135,7 +138,31 @@ class CursoForm
                                             ->searchable()
                                             ->preload()
                                             ->placeholder('Seleccione tipos de evaluaciones')
-                                            ->helperText('Tipos de evaluaciones aplicables para este curso, recordar que segun estos parametros se va a generar el plan de evaluaciones'),
+                                            ->helperText('Tipos de evaluaciones aplicables para este curso, recordar que según estos parámetros se va a generar el plan de evaluaciones')
+                                            // Cargar los tipos existentes desde las evaluaciones
+                                            ->default(function (?Model $record) {
+                                                if (!$record) {
+                                                    return [];
+                                                }
+
+                                                return $record->evaluaciones()
+                                                    ->distinct()
+                                                    ->pluck('tipo_evaluacion_id')
+                                                    ->toArray();
+                                            })
+                                            // Hacerlo dehydrated: false para manejarlo manualmente
+                                            ->dehydrated(false)
+                                            ->afterStateHydrated(function (Select $component, ?Model $record) {
+                                                if ($record) {
+                                                    $tiposIds = $record->evaluaciones()
+                                                        ->distinct()
+                                                        ->pluck('tipo_evaluacion_id')
+                                                        ->toArray();
+
+                                                    $component->state($tiposIds);
+                                                }
+                                            })
+                                            ->columnSpanFull(),
                                     ])
                                     ->columns(1),
                             ]),
@@ -237,7 +264,6 @@ class CursoForm
                                         Select::make('estado_id')
                                             ->label('Estado')
                                             ->relationship('estado', 'nombre', fn ($query) => $query->where('tipo', "cursos"))
-
                                             ->native(false)
                                             ->searchable()
                                             ->preload()
@@ -251,5 +277,4 @@ class CursoForm
                     ->contained(false),
             ]);
     }
-
 }

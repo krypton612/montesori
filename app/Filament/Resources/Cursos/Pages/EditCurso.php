@@ -18,12 +18,8 @@ class EditCurso extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        // Guardar los tipos de evaluación para sincronizar después
-        $this->tiposEvaluacion = $data['tipo_evaluacion'] ?? [];
-
-        dd($this->tiposEvaluacion);
-        // Remover del array para no intentar guardarlo en la tabla cursos
-        unset($data['tipo_evaluacion']);
+        // Capturar desde $this->data en lugar del parámetro $data
+        $this->tiposEvaluacion = $this->data['tipos_evaluacion'] ?? [];
 
         return $data;
     }
@@ -31,6 +27,7 @@ class EditCurso extends EditRecord
     protected function afterSave(): void
     {
         // Sincronizar evaluaciones después de actualizar el curso
+        $this->dispatch('parentUpdated');
         $this->sincronizarEvaluaciones();
     }
 
