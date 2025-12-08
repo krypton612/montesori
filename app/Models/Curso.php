@@ -78,4 +78,9 @@ class Curso extends Model
     {
         return $this->belongsToMany(TipoEvaluacion::class, 'evaluacion', 'curso_id', 'tipo_evaluacion_id');
     }
+
+    public function grupos()
+    {
+        return $this->belongsToMany(Grupo::class, 'curso_grupo', 'curso_id', 'grupo_id');
+    }
 }
