@@ -17,6 +17,7 @@ class Materia extends Model
         'horas_semanales',
         'descripcion',
         'habilitado',
+        'grado',
     ];
 
     protected $casts = [

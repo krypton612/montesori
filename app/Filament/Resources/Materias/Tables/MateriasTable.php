@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Materias\Tables;
 
+use Faker\Provider\Text;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -17,6 +18,10 @@ class MateriasTable
     {
         return $table
             ->columns([
+                TextColumn::make('grado')
+                    ->icon(Heroicon::OutlinedAcademicCap)
+                    ->badge()
+                    ->searchable(),
                 TextColumn::make('nombre')
                     ->icon(Heroicon::OutlinedBookOpen)
                     ->badge()

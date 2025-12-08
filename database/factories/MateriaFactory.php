@@ -24,6 +24,7 @@ class MateriaFactory extends Factory
             "horas_semanales" => $this->faker->numberBetween(1,10),
             "descripcion" => $this->faker->sentence(),
             "habilitado" => $this->faker->boolean(80),
+            'grado' => $this->faker->randomElement(['PEDAGOGIA', 'PRIMARIA', 'SECUNDARIA']),
         ];
     }
 }
