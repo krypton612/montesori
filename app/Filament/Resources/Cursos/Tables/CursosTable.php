@@ -241,6 +241,7 @@ class CursosTable
             ->defaultSort('created_at', 'desc')
             ->poll('60s') // Actualiza cada 60 segundos
             ->striped()
+            ->deferLoading()
             ->emptyStateHeading('No hay cursos registrados')
             ->emptyStateDescription('Comienza creando un nuevo curso usando el botón superior')
             ->emptyStateIcon('heroicon-o-academic-cap');

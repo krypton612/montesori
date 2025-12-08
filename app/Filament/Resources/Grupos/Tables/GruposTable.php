@@ -170,6 +170,7 @@ class GruposTable
             ->emptyStateDescription('Comienza creando tu primer grupo académico.')
             ->emptyStateIcon('heroicon-o-user-group')
             ->striped()
+            ->deferLoading()
             ->persistFiltersInSession()
             ->persistSearchInSession()
             ->persistSortInSession()

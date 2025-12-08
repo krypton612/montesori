@@ -27,6 +27,7 @@ class TipoDocumentoResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Parametros';
 
+
     protected static ?string $recordTitleAttribute = 'nombre';
 
     public static function form(Schema $schema): Schema
@@ -62,4 +63,5 @@ class TipoDocumentoResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
+
 }
