@@ -17,6 +17,7 @@ class Grupo extends Model
         'descripcion',
         'condiciones', // controla las condiciones de inscripcion.
         'activo',
+        'gestion_id'
     ];
 
     protected $casts = [
@@ -24,10 +25,14 @@ class Grupo extends Model
         'condiciones' => 'array',
     ];
 
-    function cursos()
+    public function cursos()
     {
         return $this->belongsToMany(Curso::class, 'curso_grupo', 'grupo_id', 'curso_id');
     }
 
 
+    public function gestion()
+    {
+        return $this->belongsTo(Gestion::class, 'gestion_id');
+    }
 }
