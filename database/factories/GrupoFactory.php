@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Gestion;
 use App\Models\Grupo;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -27,6 +28,7 @@ class GrupoFactory extends Factory
                 'requisitos' => $this->faker->sentence(),
             ],
             'activo' => $this->faker->boolean(90),
+            'gestion_id' => Gestion::factory()->create()->id,
         ];
     }
 }
