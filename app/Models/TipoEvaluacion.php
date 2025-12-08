@@ -44,4 +44,9 @@ class TipoEvaluacion extends Model
     {
         return $this->hasMany(Evaluacion::class);
     }
+
+    public function cursos()
+    {
+        return $this->belongsToMany(Curso::class, 'evaluacion', 'tipo_evaluacion_id', 'curso_id');
+    }
 }

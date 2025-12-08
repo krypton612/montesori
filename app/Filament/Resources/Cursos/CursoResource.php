@@ -7,6 +7,7 @@ use App\Filament\Resources\Cursos\Pages\EditCurso;
 use App\Filament\Resources\Cursos\Pages\ListCursos;
 use App\Filament\Resources\Cursos\Pages\ViewCurso;
 use App\Filament\Resources\Cursos\RelationManagers\AulasRelationManager;
+use App\Filament\Resources\Cursos\RelationManagers\EvaluacionesRelationManager;
 use App\Filament\Resources\Cursos\RelationManagers\HorariosRelationManager;
 use App\Filament\Resources\Cursos\Schemas\CursoForm;
 use App\Filament\Resources\Cursos\Schemas\CursoInfolist;
@@ -49,7 +50,8 @@ class CursoResource extends Resource
     public static function getRelations(): array
     {
         return [
-            HorariosRelationManager::class
+            HorariosRelationManager::class,
+            EvaluacionesRelationManager::class
         ];
     }
 

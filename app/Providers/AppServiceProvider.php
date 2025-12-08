@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Curso;
+use App\Observers\CursoObserver;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Curso::observe(CursoObserver::class);
+
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
             $panelSwitch->modalHeading('Paneles disponibles')
                         ->modalWidth('md')
@@ -31,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
                         ->labels([
                             'informatica' => 'Administración',
                             'inscripcion' => 'Inscripciones',
-                        ]);                      
+                        ]);
         });
     }
 }
