@@ -79,9 +79,8 @@ class GruposTable
                     ->tooltip('Número de condiciones definidas')
                     ->toggleable(),
 
-                TextColumn::make('gestion_id')
+                TextColumn::make('gestion.nombre')
                     ->label('Gestión')
-                    ->numeric()
                     ->sortable()
                     ->badge()
                     ->color('primary')

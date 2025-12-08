@@ -20,9 +20,11 @@ class GrupoResource extends Resource
 {
     protected static ?string $model = Grupo::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleGroup;
 
     protected static ?string $recordTitleAttribute = 'codigo';
+
+    protected static ?string $navigationLabel = 'Grupos Escolares';
 
     public static function form(Schema $schema): Schema
     {
