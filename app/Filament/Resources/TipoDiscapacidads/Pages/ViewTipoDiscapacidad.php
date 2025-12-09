@@ -10,6 +10,11 @@ class ViewTipoDiscapacidad extends ViewRecord
 {
     protected static string $resource = TipoDiscapacidadResource::class;
 
+    public function infolist(Infolist $infolist): Infolist
+    {
+        return TipoDiscapacidadInfolist::configure($infolist);
+    }
+
     protected function getHeaderActions(): array
     {
         return [
