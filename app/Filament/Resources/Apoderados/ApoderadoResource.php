@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Apoderados;
 
-use App\Filiment\Resources\Apoderados\Pages;
+use App\Filament\Resources\Apoderados\Pages;
 use App\Filament\Resources\Apoderados\RelationManagers\EstudiantesRelationManager;
 use App\Models\Apoderado;
 use Filament\Forms;
