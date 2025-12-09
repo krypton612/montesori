@@ -18,10 +18,12 @@ class Inscripcion extends Model
         'gestion_id',
         'fecha_inscripcion',
         'estado_id',
+        'condiciones',
     ];
 
     protected $casts = [
         'fecha_inscripcion' => 'date',
+        'condiciones' => 'array',
     ];
 
     public function estudiante()
