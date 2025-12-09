@@ -8,7 +8,6 @@ use App\Models\Grupo;
 use App\Models\Inscripcion;
 use App\Models\Estado;
 use App\Models\TipoDocumento;
-use Dom\Text;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -17,6 +16,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Infolists\Components\TextEntry;
@@ -129,7 +129,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ->disabled()
                                         ])
 
-                                        
+
                                 ])
                                 ->columns(2),
                         ]),
@@ -148,7 +148,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ->orderBy('nombre', 'desc')
                                                 ->get()
                                                 ->mapWithKeys(fn ($gestion) => [
-                                                    $gestion->id => "{$gestion->nombre} ({$gestion->fecha_inicio->format('Y-m-d')} - {$gestion->fecha_fin->format('Y-m-d')})" 
+                                                    $gestion->id => "{$gestion->nombre} ({$gestion->fecha_inicio->format('Y-m-d')} - {$gestion->fecha_fin->format('Y-m-d')})"
                                                 ]);
                                         })
                                         ->searchable()
@@ -174,6 +174,26 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->searchable()
                                         ->required()
                                         ->live()
+                                        ->afterStateUpdated(function (callable $set, $state) {
+                                            if ($state) {
+                                                $grupo = \App\Models\Grupo::find($state);
+                                                if ($grupo && !empty($grupo->condiciones)) {
+                                                    $condicionesGrupo = is_string($grupo->condiciones)
+                                                        ? json_decode($grupo->condiciones, true)
+                                                        : $grupo->condiciones;
+
+                                                    if (is_array($condicionesGrupo)) {
+                                                        $condicionesConCumple = array_map(function ($condicion) {
+                                                            return array_merge($condicion, ['cumple' => false]);
+                                                        }, $condicionesGrupo);
+
+                                                        $set('condiciones', $condicionesConCumple);
+                                                    }
+                                                } else {
+                                                    $set('condiciones', []);
+                                                }
+                                            }
+                                        })
                                         ->disabled(fn (Get $get) => !$get('gestion_id'))
                                         ->helperText(fn (Get $get) =>
                                         $get('gestion_id')
@@ -199,6 +219,78 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                             return $info;
                                         })
                                         ->hidden(fn (Get $get) => !filled($get('grupo_id')))
+                                        ->columnSpanFull(),
+
+                                    Repeater::make('condiciones')
+                                        ->label('Condiciones')
+                                        ->required()
+                                        ->hidden(fn (Get $get) => !filled($get('grupo_id')))
+                                        ->schema([
+                                            Select::make('tipo')
+                                                ->label('Tipo de Condición')
+                                                ->disabled()
+                                                ->options([
+                                                    'edad' => '👶 Edad',
+                                                    'promedio' => '📊 Promedio Académico',
+                                                    'asistencia' => '📅 Asistencia',
+                                                    'prerequisito' => '📚 Pre-requisito',
+                                                    'nivel' => '🎓 Nivel Académico',
+                                                    'otro' => '⚙️ Otro',
+                                                ])
+                                                ->required()
+                                                ->native(false)
+                                                ->live(),
+
+                                            Grid::make(2)
+                                                ->schema([
+                                                    TextInput::make('valor')
+                                                        ->label('Valor/Descripción')
+                                                        ->required()
+                                                        ->disabled()
+                                                        ->placeholder('Ej: Mínimo 70%, Mayor a 15 años, etc.')
+                                                        ->maxLength(255),
+
+                                                    Select::make('operador')
+                                                        ->label('Operador')
+                                                        ->disabled()
+                                                        ->options([
+                                                            'mayor' => 'Mayor que (>)',
+                                                            'menor' => 'Menor que (<)',
+                                                            'igual' => 'Igual a (=)',
+                                                            'mayor_igual' => 'Mayor o igual (≥)',
+                                                            'menor_igual' => 'Menor o igual (≤)',
+                                                            'entre' => 'Entre',
+                                                            'ninguno' => 'No aplica',
+                                                        ])
+                                                        ->default('ninguno')
+                                                        ->native(false),
+
+                                                ]),
+
+                                            Textarea::make('descripcion')
+                                                ->label('Descripción Detallada')
+                                                ->placeholder('Información adicional sobre esta condición...')
+                                                ->rows(2)
+                                                ->readOnly()
+                                                ->columnSpanFull(),
+
+                                            Toggle::make('obligatorio')
+                                                ->label('¿Es obligatorio?')
+                                                ->default(true)
+                                                ->disabled()
+                                                ->inline(false),
+
+                                            Toggle::make('cumple')
+                                                ->label('¿Cumple?')
+                                                ->default(false)
+                                                ->inline(false)
+                                                ->helperText('Marque si cumple con esta condición'),
+                                        ])
+                                        ->columns(2)
+                                        ->defaultItems(0)
+                                        ->reorderable()
+                                        ->addable(false)
+                                        ->deletable(false)
                                         ->columnSpanFull(),
                                 ])
                                 ->columns(2),
@@ -237,6 +329,13 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->required()
                                         ->suffixIcon('heroicon-o-check-badge')
                                         ->helperText('Estado inicial de la inscripción'),
+                                    Section::make('Estudiante y grupo')
+                                        ->columnSpan(2)
+                                        ->schema([
+                                            Textarea::make('perros')
+                                                ->label('Estudiante')
+                                        ])
+
                                 ])
                                 ->columns(3),
                         ]),
