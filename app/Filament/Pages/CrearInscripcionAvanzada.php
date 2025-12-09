@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Components\QrCode;
+use App\Filament\Fields\QrCodeView;
 use App\Models\Estudiante;
 use App\Models\Gestion;
 use App\Models\Grupo;
@@ -25,6 +27,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
@@ -213,7 +216,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                             $info = "📋 {$grupo->descripcion}\n\n";
 
                                             if ($grupo->cursos && $grupo->cursos->count() > 0) {
-                                                $info .= "📚 Cursos asignados: " . $grupo->cursos->count();
+                                                $info .= "📚 Materias asignados: " . $grupo->cursos->count();
                                             }
 
                                             return $info;
@@ -310,6 +313,8 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->unique(Inscripcion::class, 'codigo_inscripcion')
                                         ->maxLength(50)
                                         ->helperText('Código único para identificar esta inscripción')
+                                        ->readOnly()
+                                        ->live()
                                         ->suffixIcon('heroicon-o-hashtag'),
 
                                     DatePicker::make('fecha_inscripcion')
@@ -329,13 +334,47 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->required()
                                         ->suffixIcon('heroicon-o-check-badge')
                                         ->helperText('Estado inicial de la inscripción'),
-                                    Section::make('Estudiante y grupo')
+
+                                    Section::make('Estudiante')
                                         ->columnSpan(2)
                                         ->schema([
-                                            Textarea::make('perros')
+                                            Textarea::make('estudiante_nombre')
                                                 ->label('Estudiante')
-                                        ])
+                                                ->columns(1)
+                                                ->disabled(),
+                                            Textarea::make('estudiante_codigo')
+                                                ->label('Código SAGA')
+                                                ->columns(1)
+                                                ->disabled(),
 
+                                        ]),
+
+                                    QrCode::make('codigo_inscripcion')
+                                        ->data(fn (Get $get) => $get('codigo_inscripcion'))
+                                        ->size(250)
+                                        ->alignment('center')
+                                        ->visible(fn (Get $get) => filled($get('codigo_inscripcion'))), // Mostrar solo si hay código
+                                    Section::make('Información del Curso y Materias')
+                                        ->columnSpanFull()
+                                        ->schema([
+                                            Text::make('grupo_info')
+                                                ->disabled()
+                                                ->content(function (Get $get) {
+                                                    $grupoId = $get('grupo_id');
+                                                    if (!$grupoId) return 'Seleccione un grupo para ver más información';
+
+                                                    $grupo = Grupo::with('cursos')->find($grupoId);
+                                                    if (!$grupo) return 'No se encontró información';
+
+                                                    $info = "📋 {$grupo->descripcion}\n\n";
+
+                                                    if ($grupo->cursos && $grupo->cursos->count() > 0) {
+                                                        $info .= "📚 Cursos asignados: " . $grupo->cursos->count();
+                                                    }
+
+                                                    return $info;
+                                                }),
+                                        ])
                                 ])
                                 ->columns(3),
                         ]),
