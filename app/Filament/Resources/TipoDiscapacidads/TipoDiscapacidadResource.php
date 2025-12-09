@@ -2,21 +2,13 @@
 
 namespace App\Filament\Resources\TipoDiscapacidads;
 
-use App\Filament\Resources\TipoDiscapacidads\Pages\ManageTipoDiscapacidads;
+use App\Filament\Resources\TipoDiscapacidads\Pages;
 use App\Filament\Resources\TipoDiscapacidads\RelationManagers\DiscapacidadesRelationManager;
 use App\Models\TipoDiscapacidad;
-use BackedEnum;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
-use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\TextEntry;
+use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\TextColumn;
+use Filament\Tables;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -24,101 +16,68 @@ class TipoDiscapacidadResource extends Resource
 {
     protected static ?string $model = TipoDiscapacidad::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-
-    protected static string | UnitEnum | null $navigationGroup = 'Parametros';
-
-    protected static ?string $navigationLabel = 'Tipos de discapacidad';
+    protected static UnitEnum|string|null $navigationGroup = 'Gestión Personas';
 
     protected static ?string $modelLabel = 'Tipo de discapacidad';
-
     protected static ?string $pluralModelLabel = 'Tipos de discapacidad';
-
     protected static ?string $recordTitleAttribute = 'nombre';
 
     public static function form(Schema $schema): Schema
     {
         return $schema
+            ->columns(1)
             ->components([
-                TextInput::make('nombre')
+                Forms\Components\TextInput::make('nombre')
                     ->label('Nombre')
                     ->required()
-                    ->maxLength(255)
+                    ->maxLength(100)
                     ->unique(ignoreRecord: true),
 
-                TextInput::make('descripcion')
+                Forms\Components\Textarea::make('descripcion')
                     ->label('Descripción')
                     ->maxLength(255)
-                    ->nullable(),
-            ]);
-    }
-
-    public static function infolist(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
-                TextEntry::make('nombre')
-                    ->label('Nombre'),
-
-                TextEntry::make('descripcion')
-                    ->label('Descripción')
-                    ->placeholder('-'),
-
-                TextEntry::make('created_at')
-                    ->label('Creado')
-                    ->dateTime()
-                    ->placeholder('-'),
-
-                TextEntry::make('updated_at')
-                    ->label('Actualizado')
-                    ->dateTime()
-                    ->placeholder('-'),
+                    ->columnSpanFull(),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('nombre')
             ->columns([
-                TextColumn::make('nombre')
+                Tables\Columns\TextColumn::make('nombre')
                     ->label('Nombre')
-                    ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
 
-                TextColumn::make('descripcion')
+                Tables\Columns\TextColumn::make('descripcion')
                     ->label('Descripción')
-                    ->searchable()
                     ->limit(60),
 
-                TextColumn::make('discapacidades_count')
-                    ->label('N° discapacidades')
-                    ->counts('discapacidades')
-                    ->sortable(),
-
-                TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')
                     ->label('Creado')
-                    ->dateTime()
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                TextColumn::make('updated_at')
+                Tables\Columns\TextColumn::make('updated_at')
                     ->label('Actualizado')
-                    ->dateTime()
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\Filter::make('con_descripcion')
+                    ->label('Con descripción')
+                    ->query(fn ($q) => $q->whereNotNull('descripcion')),
             ])
-            ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
-                DeleteAction::make(),
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -133,7 +92,10 @@ class TipoDiscapacidadResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ManageTipoDiscapacidads::route('/'),
+            'index'  => Pages\ListTipoDiscapacidads::route('/'),
+            'create' => Pages\CreateTipoDiscapacidad::route('/create'),
+            'view'   => Pages\ViewTipoDiscapacidad::route('/{record}'),
+            'edit'   => Pages\EditTipoDiscapacidad::route('/{record}/edit'),
         ];
     }
 }
