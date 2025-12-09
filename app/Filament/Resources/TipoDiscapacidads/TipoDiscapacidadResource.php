@@ -16,7 +16,7 @@ class TipoDiscapacidadResource extends Resource
 {
     protected static ?string $model = TipoDiscapacidad::class;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Gestión Personas';
+    protected static UnitEnum|string|null $navigationGroup = 'Parametros';
 
     protected static ?string $modelLabel = 'Tipo de discapacidad';
     protected static ?string $pluralModelLabel = 'Tipos de discapacidad';
