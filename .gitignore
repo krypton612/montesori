@@ -1,3 +1,4 @@
+storage/debugbar/*
 *.log
 .DS_Store
 .env

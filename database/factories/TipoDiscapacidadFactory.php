@@ -13,7 +13,7 @@ class TipoDiscapacidadFactory extends Factory
     {
         return [
             'nombre'      => $this->faker->words(2, true),
-            'descripcion' => $this->faker->optional()->sentence(8),
+            'descripcion' => $this->faker->sentence(8),
         ];
     }
 }
