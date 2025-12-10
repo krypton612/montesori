@@ -554,6 +554,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                 'gestion_id' => $data['gestion_id'],
                 'fecha_inscripcion' => $data['fecha_inscripcion'],
                 'estado_id' => $data['estado_id'],
+                'condiciones' => $data['condiciones']
             ]);
 
             // Procesar documentos si existen
