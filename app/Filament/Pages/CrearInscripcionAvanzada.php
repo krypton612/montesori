@@ -2,13 +2,14 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Components\QrCode;
+use App\Filament\Fields\QrCodeView;
 use App\Models\Estudiante;
 use App\Models\Gestion;
 use App\Models\Grupo;
 use App\Models\Inscripcion;
 use App\Models\Estado;
 use App\Models\TipoDocumento;
-use Dom\Text;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -17,14 +18,18 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
@@ -129,7 +134,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ->disabled()
                                         ])
 
-                                        
+
                                 ])
                                 ->columns(2),
                         ]),
@@ -148,7 +153,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ->orderBy('nombre', 'desc')
                                                 ->get()
                                                 ->mapWithKeys(fn ($gestion) => [
-                                                    $gestion->id => "{$gestion->nombre} ({$gestion->fecha_inicio->format('Y-m-d')} - {$gestion->fecha_fin->format('Y-m-d')})" 
+                                                    $gestion->id => "{$gestion->nombre} ({$gestion->fecha_inicio->format('Y-m-d')} - {$gestion->fecha_fin->format('Y-m-d')})"
                                                 ]);
                                         })
                                         ->searchable()
@@ -174,6 +179,26 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->searchable()
                                         ->required()
                                         ->live()
+                                        ->afterStateUpdated(function (callable $set, $state) {
+                                            if ($state) {
+                                                $grupo = \App\Models\Grupo::find($state);
+                                                if ($grupo && !empty($grupo->condiciones)) {
+                                                    $condicionesGrupo = is_string($grupo->condiciones)
+                                                        ? json_decode($grupo->condiciones, true)
+                                                        : $grupo->condiciones;
+
+                                                    if (is_array($condicionesGrupo)) {
+                                                        $condicionesConCumple = array_map(function ($condicion) {
+                                                            return array_merge($condicion, ['cumple' => false]);
+                                                        }, $condicionesGrupo);
+
+                                                        $set('condiciones', $condicionesConCumple);
+                                                    }
+                                                } else {
+                                                    $set('condiciones', []);
+                                                }
+                                            }
+                                        })
                                         ->disabled(fn (Get $get) => !$get('gestion_id'))
                                         ->helperText(fn (Get $get) =>
                                         $get('gestion_id')
@@ -193,12 +218,84 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                             $info = "📋 {$grupo->descripcion}\n\n";
 
                                             if ($grupo->cursos && $grupo->cursos->count() > 0) {
-                                                $info .= "📚 Cursos asignados: " . $grupo->cursos->count();
+                                                $info .= "📚 Materias asignados: " . $grupo->cursos->count();
                                             }
 
                                             return $info;
                                         })
                                         ->hidden(fn (Get $get) => !filled($get('grupo_id')))
+                                        ->columnSpanFull(),
+
+                                    Repeater::make('condiciones')
+                                        ->label('Condiciones')
+                                        ->required()
+                                        ->hidden(fn (Get $get) => !filled($get('grupo_id')))
+                                        ->schema([
+                                            Select::make('tipo')
+                                                ->label('Tipo de Condición')
+                                                ->disabled()
+                                                ->options([
+                                                    'edad' => '👶 Edad',
+                                                    'promedio' => '📊 Promedio Académico',
+                                                    'asistencia' => '📅 Asistencia',
+                                                    'prerequisito' => '📚 Pre-requisito',
+                                                    'nivel' => '🎓 Nivel Académico',
+                                                    'otro' => '⚙️ Otro',
+                                                ])
+                                                ->required()
+                                                ->native(false)
+                                                ->live(),
+
+                                            Grid::make(2)
+                                                ->schema([
+                                                    TextInput::make('valor')
+                                                        ->label('Valor/Descripción')
+                                                        ->required()
+                                                        ->disabled()
+                                                        ->placeholder('Ej: Mínimo 70%, Mayor a 15 años, etc.')
+                                                        ->maxLength(255),
+
+                                                    Select::make('operador')
+                                                        ->label('Operador')
+                                                        ->disabled()
+                                                        ->options([
+                                                            'mayor' => 'Mayor que (>)',
+                                                            'menor' => 'Menor que (<)',
+                                                            'igual' => 'Igual a (=)',
+                                                            'mayor_igual' => 'Mayor o igual (≥)',
+                                                            'menor_igual' => 'Menor o igual (≤)',
+                                                            'entre' => 'Entre',
+                                                            'ninguno' => 'No aplica',
+                                                        ])
+                                                        ->default('ninguno')
+                                                        ->native(false),
+
+                                                ]),
+
+                                            Textarea::make('descripcion')
+                                                ->label('Descripción Detallada')
+                                                ->placeholder('Información adicional sobre esta condición...')
+                                                ->rows(2)
+                                                ->readOnly()
+                                                ->columnSpanFull(),
+
+                                            Toggle::make('obligatorio')
+                                                ->label('¿Es obligatorio?')
+                                                ->default(true)
+                                                ->disabled()
+                                                ->inline(false),
+
+                                            Toggle::make('cumple')
+                                                ->label('¿Cumple?')
+                                                ->default(false)
+                                                ->inline(false)
+                                                ->helperText('Marque si cumple con esta condición'),
+                                        ])
+                                        ->columns(2)
+                                        ->defaultItems(0)
+                                        ->reorderable()
+                                        ->addable(false)
+                                        ->deletable(false)
                                         ->columnSpanFull(),
                                 ])
                                 ->columns(2),
@@ -207,6 +304,33 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                     Wizard\Step::make('Detalles de Inscripción')
                         ->description('Complete los datos de la inscripción')
                         ->icon('heroicon-o-document-text')
+                        ->beforeValidation(function (Get $get) {
+                            $estudianteId = $get('estudiante_id');
+                            $grupoId = $get('grupo_id');
+
+
+                            if (!$estudianteId || !$grupoId) {
+                                return;
+                            }
+
+                            $grupo = Grupo::find($grupoId);
+
+                            $existente = Inscripcion::where('estudiante_id', $estudianteId)
+                                ->where('grupo_id', $grupoId)
+                                ->where('gestion_id', $grupo->gestion_id)
+                                ->first();
+
+                            if ($existente) {
+                                Notification::make()
+                                    ->title('Inscripción duplicada')
+                                    ->body('El estudiante ya está inscrito en este grupo para la gestión seleccionada.')
+                                    ->danger()
+                                    ->persistent()
+                                    ->send();
+
+                                throw new \Filament\Support\Exceptions\Halt();
+                            }
+                        })
                         ->schema([
                             Section::make('Información de Inscripción')
                                 ->description('Datos administrativos de la inscripción')
@@ -218,6 +342,8 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->unique(Inscripcion::class, 'codigo_inscripcion')
                                         ->maxLength(50)
                                         ->helperText('Código único para identificar esta inscripción')
+                                        ->readOnly()
+                                        ->live()
                                         ->suffixIcon('heroicon-o-hashtag'),
 
                                     DatePicker::make('fecha_inscripcion')
@@ -237,6 +363,107 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->required()
                                         ->suffixIcon('heroicon-o-check-badge')
                                         ->helperText('Estado inicial de la inscripción'),
+
+                                    Section::make('Estudiante')
+                                        ->columnSpan(2)
+                                        ->schema([
+                                            Grid::make(2)
+                                                ->schema([
+                                                    TextInput::make('estudiante_nombre')
+                                                        ->label('Estudiante')
+                                                        ->columns(1)
+                                                        ->readOnly()
+                                                        ->disabled(),
+                                                    TextInput::make('estudiante_codigo')
+                                                        ->label('Código SAGA')
+                                                        ->columns(1)
+                                                        ->readOnly()
+                                                        ->disabled(),
+
+                                                    // este atributo es condicionado - si el estudiante ya esta inscrito en el curso seleccionado, entonces mostrar "El estudiante ya está inscrito en este grupo para la gestión seleccionada."
+                                                    Placeholder::make('inscripcion_validacion')
+                                                        ->label('Validación de Inscripción')
+                                                        ->content(function (Get $get) {
+                                                            $estudianteId = $get('estudiante_id');
+                                                            $grupoId = $get('grupo_id');
+                                                            if (!$grupoId) return 'Seleccione un grupo y estudiante para ver más información';
+
+                                                            $grupo = Grupo::with('cursos')->find($grupoId);
+                                                            if (!$grupo) return 'No se encontró información';
+
+                                                            $estudiante = Estudiante::with('persona')->find($estudianteId);
+                                                            if (!$estudiante) return 'No se encontró información del estudiante';
+
+                                                            $existente = Inscripcion::where('estudiante_id', $estudianteId)
+                                                                ->where('grupo_id', $grupoId)
+                                                                ->where('gestion_id', $grupo->gestion_id)
+                                                                ->first();
+
+                                                            $info = $existente
+                                                                ? "⚠️ El estudiante {$estudiante->persona->nombre} {$estudiante->persona->apellido_pat} ya está inscrito en este grupo para la gestión seleccionada y su inscripcion es invalida."
+                                                                : "✅ El estudiante {$estudiante->persona->nombre} {$estudiante->persona->apellido_pat} no está inscrito en este grupo y puede proceder con la inscripción.";
+
+
+                                                            return $info;
+                                                        })
+                                                        ->hidden(fn (Get $get) => !filled($get('grupo_id')))
+                                                        ->columnSpanFull(),
+
+
+                                                ])
+                                        ]),
+
+                                    QrCode::make('codigo_inscripcion')
+                                        ->data(fn (Get $get) => $get('codigo_inscripcion'))
+                                        ->size(250)
+                                        ->alignment('center')
+                                        ->visible(fn (Get $get) => filled($get('codigo_inscripcion'))), // Mostrar solo si hay código
+                                    Section::make('Información del Curso y Materias')
+                                        ->columnSpanFull()
+                                        ->schema([
+                                            KeyValueEntry::make('materias')
+                                                ->label('Lista de materias y profesores')
+                                                ->keyLabel("Materia")
+                                                ->valueLabel("Profesor")
+                                                ->hidden(fn (Get $get) => !filled($get('grupo_id')))
+                                                ->state(function (Get $get) {
+                                                    $grupoId = $get('grupo_id');
+                                                    if (!$grupoId) return [];
+
+                                                    $grupo = Grupo::with(['cursos.materia', 'cursos.profesor.persona'])->find($grupoId);
+                                                    if (!$grupo || !$grupo->cursos) return [];
+
+                                                    $materias = [];
+                                                    foreach ($grupo->cursos as $curso) {
+                                                        $nombreMateria = $curso->materia->nombre ?? 'Sin materia';
+                                                        $nombreProfesor = $curso->profesor
+                                                            ? "{$curso->profesor->persona->nombre} {$curso->profesor->persona->apellido_pat} {$curso->profesor->persona->apellido_mat}"
+                                                            : 'Sin profesor';
+
+                                                        $materias[$nombreMateria] = $nombreProfesor;
+                                                    }
+
+                                                    return $materias;
+                                                })
+                                            ,
+                                            Text::make('grupo_info')
+                                                ->disabled()
+                                                ->content(function (Get $get) {
+                                                    $grupoId = $get('grupo_id');
+                                                    if (!$grupoId) return 'Seleccione un grupo para ver más información';
+
+                                                    $grupo = Grupo::with('cursos')->find($grupoId);
+                                                    if (!$grupo) return 'No se encontró información';
+
+                                                    $info = "📋 {$grupo->descripcion}\n\n";
+
+                                                    if ($grupo->cursos && $grupo->cursos->count() > 0) {
+                                                        $info .= "📚 Cursos asignados: " . $grupo->cursos->count();
+                                                    }
+
+                                                    return $info;
+                                                }),
+                                        ])
                                 ])
                                 ->columns(3),
                         ]),
@@ -289,7 +516,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                     ->columnSpanFull()
                     ->submitAction(view('filament.pages.components.submit-button'))
                     ->persistStepInQueryString()
-                    ->skippable(true)
+                    ->skippable(false)
                     ,
 
             ])
