@@ -11,6 +11,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class TipoDiscapacidadsTable
 {
@@ -20,6 +21,7 @@ class TipoDiscapacidadsTable
             ->columns([
                 TextColumn::make('nombre')
                     ->label('Nombre')
+                    ->badge()
                     ->searchable()
                     ->sortable(),
 
@@ -27,9 +29,14 @@ class TipoDiscapacidadsTable
                     ->label('Descripción')
                     ->formatStateUsing(fn (?string $state) => $state ?: 'Sin descripción')
                     ->badge()
+                    ->formatStateUsing(function ($state) {
+                        $textoPlano = strip_tags($state);         // quita HTML para evitar cortes rotos
+                        $resumen = Str::limit($textoPlano, 50);   // corto yo manualmente
+                        return "<div>{$resumen}</div>";           // regreso HTML
+                    })
+                    ->html()
                     ->color(fn (?string $state) => $state ? 'gray' : 'danger')
-                    ->limit(80)
-                    ->wrap(),
+                    ->limit(10),
 
                 TextColumn::make('created_at')
                     ->label('Creado')

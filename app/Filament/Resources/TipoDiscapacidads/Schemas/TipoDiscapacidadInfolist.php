@@ -16,6 +16,7 @@ class TipoDiscapacidadInfolist
 
                 TextEntry::make('descripcion')
                     ->label('Descripción')
+                    ->html()
                     ->placeholder('-'),
 
                 TextEntry::make('created_at')

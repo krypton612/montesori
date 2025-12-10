@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TipoDiscapacidads\Schemas;
 
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -21,10 +22,9 @@ class TipoDiscapacidadForm
                     ->unique(ignoreRecord: true)
                     ->autofocus(),
 
-                Textarea::make('descripcion')
+                RichEditor::make('descripcion')
                     ->label('Descripción')
                     ->placeholder('Describe brevemente el tipo de discapacidad...')
-                    ->rows(3)
                     ->maxLength(255)
                     ->columnSpanFull(),
             ]);
