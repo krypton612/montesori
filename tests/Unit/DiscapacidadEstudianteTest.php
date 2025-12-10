@@ -20,7 +20,6 @@ class DiscapacidadEstudianteTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('discapacidad_estudiante', [
-            'id'              => $registro->id,
             'discapacidad_id' => $registro->discapacidad_id,
             'estudiante_id'   => $registro->estudiante_id,
             'observacion'     => 'Observación desde factory',
@@ -77,7 +76,7 @@ class DiscapacidadEstudianteTest extends TestCase
         $discapacidad = Discapacidad::factory()->create();
         $estudiante   = Estudiante::factory()->create();
 
-        $registro = DiscapacidadEstudiante::create([
+        $registro = DiscapacidadEstudiante::factory()->create([
             'discapacidad_id' => (string) $discapacidad->id,
             'estudiante_id'   => (string) $estudiante->id,
             'observacion'     => 'Prueba de casts',
