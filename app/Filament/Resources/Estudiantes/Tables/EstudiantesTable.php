@@ -26,6 +26,7 @@ class EstudiantesTable
     {
         return $table
             ->columns([
+
                 ImageColumn::make('foto_url')
                     ->disk('public')
                     ->label('Foto')

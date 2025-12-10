@@ -35,4 +35,5 @@ class Grupo extends Model
     {
         return $this->belongsTo(Gestion::class, 'gestion_id');
     }
+
 }

@@ -45,7 +45,7 @@ class Estudiante extends Model
     public function persona()
     {
         return $this->belongsTo(Persona::class, 'persona_id');
-    } 
+    }
 
     public function discapacidades()
     {
@@ -53,6 +53,11 @@ class Estudiante extends Model
             ->using(DiscapacidadEstudiante::class) // usa el modelo pivote custom
             ->withPivot('observacion')
             ->withTimestamps();
+    }
+
+    public function getDiscapacidadesCountAttribute()
+    {
+        return $this->discapacidades()->count();
     }
 
     /**

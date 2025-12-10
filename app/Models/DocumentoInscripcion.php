@@ -13,7 +13,6 @@ class DocumentoInscripcion extends Model
 
     protected $fillable = [
         'inscripcion_id',
-        'inscripcion_id',
         'tipo_documento_id',
         'nombre_archivo',
     ];

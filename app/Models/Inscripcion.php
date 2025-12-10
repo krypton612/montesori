@@ -18,10 +18,12 @@ class Inscripcion extends Model
         'gestion_id',
         'fecha_inscripcion',
         'estado_id',
+        'condiciones',
     ];
 
     protected $casts = [
         'fecha_inscripcion' => 'date',
+        'condiciones' => 'array',
     ];
 
     public function estudiante()
@@ -42,5 +44,10 @@ class Inscripcion extends Model
     public function estado()
     {
         return $this->belongsTo(Estado::class, 'estado_id');
+    }
+
+    public function documentos()
+    {
+        return $this->hasMany(DocumentoInscripcion::class, 'inscripcion_id');
     }
 }

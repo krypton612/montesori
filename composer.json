@@ -13,9 +13,11 @@
         "joaopaulolndev/filament-pdf-viewer": "^2.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "secondnetwork/blade-tabler-icons": "^3.35"
+        "secondnetwork/blade-tabler-icons": "^3.35",
+        "simplesoftwareio/simple-qrcode": "^4.2"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.16",
         "blade-ui-kit/blade-icons": "^1.8",
         "fakerphp/faker": "^1.23",
         "laravel-lang/common": "^6.7",
