@@ -61,6 +61,8 @@ class InformaticaPanelProvider extends PanelProvider
                 FilamentShieldPlugin::make()->navigationGroup('Seguridad'),
             ])
             ->navigationGroups([
+                NavigationGroup::make('Inscripcion Estudiantil')
+                    ->icon(Heroicon::OutlinedUserPlus),
                 NavigationGroup::make('Gestion Personas')
                     ->icon('heroicon-o-circle-stack'),
                 NavigationGroup::make('Gestion Academica')
