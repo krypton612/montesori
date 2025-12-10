@@ -24,6 +24,7 @@ class TipoDiscapacidadForm
 
                 RichEditor::make('descripcion')
                     ->label('Descripción')
+                    ->required()
                     ->placeholder('Describe brevemente el tipo de discapacidad...')
                     ->maxLength(255)
                     ->columnSpanFull(),
