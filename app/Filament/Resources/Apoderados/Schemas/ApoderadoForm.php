@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Apoderados\Schemas;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
+use Illuminate\Database\Eloquent\Builder;
 
 class ApoderadoForm
 {
@@ -16,17 +17,26 @@ class ApoderadoForm
                 Section::make('Datos de la persona')
                     ->icon('heroicon-o-user')
                     ->description('Selecciona la persona asociada a este apoderado')
-                    ->columnSpanFull() // ocupa el ancho completo
+                    ->columnSpanFull()
                     ->schema([
                         Forms\Components\Select::make('persona_id')
                             ->label('Persona')
                             ->relationship(
-                                'persona',
-                                'nombre',
-                                fn ($query) => $query
-                                    ->whereDoesntHave('estudiante') // no debe ser estudiante
-                                    ->whereDoesntHave('apoderado')  // ni ya apoderado
-                                    ->orderBy('nombre')
+                                name: 'persona',
+                                titleAttribute: 'nombre',
+                                modifyQueryUsing: function (Builder $query, string $operation) {
+                                    // Siempre ordenamos por nombre
+                                    $query->orderBy('nombre');
+
+                                    // Solo en CREATE aplicamos el filtro:
+                                    // - no puede ser estudiante
+                                    // - no puede ser ya apoderado
+                                    if ($operation === 'create') {
+                                        $query
+                                            ->whereDoesntHave('estudiante')
+                                            ->whereDoesntHave('apoderado');
+                                    }
+                                },
                             )
                             ->searchable(['nombre', 'apellido_pat', 'apellido_mat', 'email_personal'])
                             ->getOptionLabelFromRecordUsing(
@@ -40,13 +50,16 @@ class ApoderadoForm
                             ->helperText('Busca por nombre, apellidos o correo.')
                             ->prefixIcon('heroicon-o-user-circle')
                             ->columnSpanFull()
-                            ->disabledOn('edit'), // en edición no permites cambiar la persona
+                            // si quieres que en Edit no se pueda cambiar la persona,
+                            // descomenta la siguiente línea:
+                            // ->disabledOn('edit')
+                            ,
                     ]),
 
                 Section::make('Información del apoderado')
                     ->icon('heroicon-o-briefcase')
-                    ->columnSpanFull() // segunda sección a todo el ancho
-                    ->columns(2)       // pero interna en 2 columnas, como en tu diseño
+                    ->columnSpanFull()
+                    ->columns(2)
                     ->schema([
                         Forms\Components\TextInput::make('ocupacion')
                             ->label('Ocupación')
@@ -66,7 +79,6 @@ class ApoderadoForm
                             ->placeholder('Ej: Jefe de área')
                             ->prefixIcon('heroicon-o-briefcase'),
 
-                        // Convertido a SELECT
                         Forms\Components\Select::make('nivel_educacion')
                             ->label('Nivel de educación')
                             ->options([
@@ -81,7 +93,6 @@ class ApoderadoForm
                             ->placeholder('Seleccione una opción')
                             ->prefixIcon('heroicon-o-academic-cap'),
 
-                        // Convertido a SELECT
                         Forms\Components\Select::make('estado_civil')
                             ->label('Estado civil')
                             ->options([
