@@ -50,9 +50,7 @@ class ApoderadoForm
                             ->helperText('Busca por nombre, apellidos o correo.')
                             ->prefixIcon('heroicon-o-user-circle')
                             ->columnSpanFull()
-                            // si quieres que en Edit no se pueda cambiar la persona,
-                            // descomenta la siguiente línea:
-                            // ->disabledOn('edit')
+                            ->disabledOn('edit')
                             ,
                     ]),
 
