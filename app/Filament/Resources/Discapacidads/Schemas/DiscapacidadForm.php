@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Discapacidads\Schemas;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
+use App\Models\Discapacidad;
 
 class DiscapacidadForm
 {
@@ -22,9 +23,29 @@ class DiscapacidadForm
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\TextInput::make('codigo')
+                       Forms\Components\TextInput::make('codigo')
                             ->label('Código')
-                            ->maxLength(50),
+                            ->default(function () {
+                                // Generar el código automáticamente: DISC-A1, DISC-A2, etc.
+                                $ultimoCodigo = Discapacidad::orderBy('id', 'desc')
+                                    ->where('codigo', 'like', 'DISC-A%')
+                                    ->first('codigo');
+                                
+                                if ($ultimoCodigo && $ultimoCodigo->codigo) {
+                                    // Extraer el número del último código
+                                    preg_match('/DISC-A(\d+)/', $ultimoCodigo->codigo, $matches);
+                                    $numero = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
+                                } else {
+                                    $numero = 1;
+                                }
+                                
+                                return 'DISC-A' . $numero;
+                            })
+                            ->required()
+                            ->maxLength(20)
+                            ->readOnly()  // Hacer el campo de solo lectura
+                            ->disabled()  // Deshabilitar la edición
+                            ->dehydrated(), // Asegurar que se guarde el valor
 
                         Forms\Components\Select::make('tipo_discapacidad_id')
                             ->label('Tipo de discapacidad')
