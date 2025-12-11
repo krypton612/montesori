@@ -16,14 +16,17 @@ class ApoderadoForm
                 Section::make('Datos de la persona')
                     ->icon('heroicon-o-user')
                     ->description('Selecciona la persona asociada a este apoderado')
-                    ->columnSpan(2)
+                    ->columnSpanFull() // ocupa el ancho completo
                     ->schema([
                         Forms\Components\Select::make('persona_id')
                             ->label('Persona')
                             ->relationship(
                                 'persona',
                                 'nombre',
-                                fn ($query) => $query->orderBy('nombre')
+                                fn ($query) => $query
+                                    ->whereDoesntHave('estudiante') // no debe ser estudiante
+                                    ->whereDoesntHave('apoderado')  // ni ya apoderado
+                                    ->orderBy('nombre')
                             )
                             ->searchable(['nombre', 'apellido_pat', 'apellido_mat', 'email_personal'])
                             ->getOptionLabelFromRecordUsing(
@@ -36,12 +39,14 @@ class ApoderadoForm
                             ->required()
                             ->helperText('Busca por nombre, apellidos o correo.')
                             ->prefixIcon('heroicon-o-user-circle')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->disabledOn('edit'), // en edición no permites cambiar la persona
                     ]),
 
                 Section::make('Información del apoderado')
                     ->icon('heroicon-o-briefcase')
-                    ->columns(2)
+                    ->columnSpanFull() // segunda sección a todo el ancho
+                    ->columns(2)       // pero interna en 2 columnas, como en tu diseño
                     ->schema([
                         Forms\Components\TextInput::make('ocupacion')
                             ->label('Ocupación')
@@ -61,16 +66,32 @@ class ApoderadoForm
                             ->placeholder('Ej: Jefe de área')
                             ->prefixIcon('heroicon-o-briefcase'),
 
-                        Forms\Components\TextInput::make('nivel_educacion')
+                        // Convertido a SELECT
+                        Forms\Components\Select::make('nivel_educacion')
                             ->label('Nivel de educación')
-                            ->maxLength(255)
-                            ->placeholder('Ej: Licenciatura, Técnico, Secundaria')
+                            ->options([
+                                'primaria'      => 'Primaria',
+                                'secundaria'    => 'Secundaria',
+                                'tecnico'       => 'Técnico',
+                                'universitario' => 'Universitario',
+                                'postgrado'     => 'Postgrado',
+                            ])
+                            ->native(false)
+                            ->searchable()
+                            ->placeholder('Seleccione una opción')
                             ->prefixIcon('heroicon-o-academic-cap'),
 
-                        Forms\Components\TextInput::make('estado_civil')
+                        // Convertido a SELECT
+                        Forms\Components\Select::make('estado_civil')
                             ->label('Estado civil')
-                            ->maxLength(255)
-                            ->placeholder('Ej: Soltero, Casado, Divorciado')
+                            ->options([
+                                'soltero'     => 'Soltero(a)',
+                                'casado'      => 'Casado(a)',
+                                'divorciado'  => 'Divorciado(a)',
+                                'viudo'       => 'Viudo(a)',
+                            ])
+                            ->native(false)
+                            ->placeholder('Seleccione una opción')
                             ->prefixIcon('heroicon-o-heart'),
                     ]),
             ]);

@@ -22,11 +22,8 @@ class ApoderadoResource extends Resource
 {
     protected static ?string $model = Apoderado::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserCircle;
-    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::UserCircle;
-
     // Ajusta el grupo si quieres moverlo luego
-    protected static string|UnitEnum|null $navigationGroup = 'Gestión Académica';
+    protected static string|UnitEnum|null $navigationGroup = 'Gestion Personas';
 
     // Si tienes accessor nombre_completo en Persona, mantenlo. Si no, puedes cambiarlo.
     protected static ?string $recordTitleAttribute = 'persona.nombre_completo';
