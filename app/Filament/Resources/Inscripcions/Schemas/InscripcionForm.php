@@ -52,8 +52,10 @@ class InscripcionForm
                             ->searchable()
                             ->required()
                             ->live()
-                            ->afterStateUpdated(function ($state, callable $set, $context) {
-                                if ($state) {
+                            ->afterStateHydrated(function ($state, callable $set, $context) {
+                                // Se ejecuta cuando se carga el formulario en modo edit
+                                if ($state && $context === 'edit' || $context === 'view') {
+
                                     $estudiante = Estudiante::with('persona')->find($state);
                                     if ($estudiante && $estudiante->persona) {
                                         $set('estudiante_nombre', "{$estudiante->persona->nombre} {$estudiante->persona->apellido_pat} {$estudiante->persona->apellido_mat}");
@@ -61,11 +63,6 @@ class InscripcionForm
                                         $set('estudiante_codigo', $estudiante->codigo_saga ?? 'N/A');
                                         $set('estudiante_estado', $estudiante->estado_academico ?? 'N/A');
                                     }
-                                } else {
-                                    $set('estudiante_nombre', null);
-                                    $set('estudiante_ci', null);
-                                    $set('estudiante_codigo', null);
-                                    $set('estudiante_estado', null);
                                 }
                             })
                             ->helperText('Busque por nombre o código SAGA')
@@ -174,7 +171,9 @@ class InscripcionForm
                             ->required()
                             ->live()
                             ->afterStateUpdated(fn (callable $set) => $set('grupo_id', null))
-                            ->helperText('Seleccione la gestión académica vigente'),
+                            ->helperText('Seleccione la gestión académica vigente')
+                            ->disabled()
+                        ,
 
                         Select::make('grupo_id')
                             ->label('Grupo')
@@ -193,27 +192,7 @@ class InscripcionForm
                             ->searchable()
                             ->required()
                             ->live()
-                            ->afterStateUpdated(function (callable $set, $state) {
-                                if ($state) {
-                                    $grupo = Grupo::find($state);
-                                    if ($grupo && !empty($grupo->condiciones)) {
-                                        $condicionesGrupo = is_string($grupo->condiciones)
-                                            ? json_decode($grupo->condiciones, true)
-                                            : $grupo->condiciones;
-
-                                        if (is_array($condicionesGrupo)) {
-                                            $condicionesConCumple = array_map(function ($condicion) {
-                                                return array_merge($condicion, ['cumple' => false]);
-                                            }, $condicionesGrupo);
-
-                                            $set('condiciones', $condicionesConCumple);
-                                        }
-                                    } else {
-                                        $set('condiciones', []);
-                                    }
-                                }
-                            })
-                            ->disabled(fn (Get $get) => !$get('gestion_id'))
+                            ->disabled()
                             ->helperText(fn (Get $get) =>
                             $get('gestion_id')
                                 ? 'Seleccione el grupo al que se inscribirá'
@@ -336,7 +315,7 @@ class InscripcionForm
 
                         DatePicker::make('fecha_inscripcion')
                             ->label('Fecha de Inscripción')
-                            ->default(now())
+                            ->readOnly()
                             ->required()
                             ->native(false)
                             ->displayFormat('d/m/Y')
@@ -391,7 +370,7 @@ class InscripcionForm
                                     : $estudiante->codigo_saga;
 
                                 $info = $existente
-                                    ? "⚠️ El estudiante {$nombre} ya está inscrito en este grupo para la gestión seleccionada. La inscripción sería inválida."
+                                    ? "⚠️ El estudiante {$nombre} ya está inscrito en este grupo para la gestión seleccionada. Haga las modificaciones correspondientes."
                                     : "✅ El estudiante {$nombre} no está inscrito en este grupo y puede proceder con la inscripción.";
 
                                 return $info;
