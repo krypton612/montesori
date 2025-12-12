@@ -1,3 +1,7 @@
 <x-filament-panels::page>
-    {{-- Page content --}}
+    <form wire:submit="create">
+        {{ $this->form }}
+    </form>
+
+    <x-filament-actions::modals />
 </x-filament-panels::page>
