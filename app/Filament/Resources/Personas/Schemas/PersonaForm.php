@@ -60,6 +60,14 @@ class PersonaForm
                             ->autocomplete(false)
                             ->columnSpan(1),
 
+                        TextInput::make('carnet_identidad')
+                            ->label('Carnet de Identidad')
+                            ->required()
+                            ->maxLength(20)
+                            ->placeholder('Ingrese el número de carnet de identidad')
+                            ->autocomplete(false)
+                            ->columnSpan(1),
+
                         DatePicker::make('fecha_nacimiento')
                             ->label('Fecha de Nacimiento')
                             ->native(false)
@@ -69,7 +77,7 @@ class PersonaForm
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($set, $state) {
                                 if ($state) {
-                                   
+
                                     $edad = now()->diffInYears($state);
                                     $edad = number_format($edad, 0, '', '');
                                     $set('edad', $edad * -1);
@@ -177,7 +185,7 @@ class PersonaForm
                                     ]),
                             ])
                             ->createOptionModalHeading('Crear Nuevo Usuario')
-                            
+
                             ->suffixAction(
                                 ActionsAction::make('clearUser')
                                     ->icon('heroicon-o-x-mark')
