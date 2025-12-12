@@ -227,6 +227,7 @@ class InscripcionForm
                                 Select::make('tipo')
                                     ->label('Tipo de Condición')
                                     ->disabled()
+                                    ->dehydrated()
                                     ->options([
                                         'edad' => '👶 Edad',
                                         'promedio' => '📊 Promedio Académico',
@@ -245,12 +246,14 @@ class InscripcionForm
                                             ->label('Valor/Descripción')
                                             ->required()
                                             ->disabled()
+                                            ->dehydrated()
                                             ->placeholder('Ej: Mínimo 70%, Mayor a 15 años, etc.')
                                             ->maxLength(255),
 
                                         Select::make('operador')
                                             ->label('Operador')
                                             ->disabled()
+                                            ->dehydrated()
                                             ->options([
                                                 'mayor' => 'Mayor que (>)',
                                                 'menor' => 'Menor que (<)',
@@ -275,6 +278,7 @@ class InscripcionForm
                                     ->label('¿Es obligatorio?')
                                     ->default(true)
                                     ->disabled()
+                                    ->dehydrated()
                                     ->inline(false),
 
                                 Toggle::make('cumple')

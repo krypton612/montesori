@@ -53,7 +53,7 @@ class InscripcionResource extends Resource
     {
         return [
             'index' => ListInscripcions::route('/'),
-            'create' => CreateInscripcion::route('/create'),
+            'create' => CreateInscripcion::route('../crear-inscripcion-avanzada'),
             'view' => ViewInscripcion::route('/{record}'),
             'edit' => EditInscripcion::route('/{record}/edit'),
         ];
