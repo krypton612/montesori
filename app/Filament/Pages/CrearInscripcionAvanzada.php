@@ -234,6 +234,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                             Select::make('tipo')
                                                 ->label('Tipo de Condición')
                                                 ->disabled()
+                                                ->dehydrated()
                                                 ->options([
                                                     'edad' => '👶 Edad',
                                                     'promedio' => '📊 Promedio Académico',
@@ -252,12 +253,14 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                         ->label('Valor/Descripción')
                                                         ->required()
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->placeholder('Ej: Mínimo 70%, Mayor a 15 años, etc.')
                                                         ->maxLength(255),
 
                                                     Select::make('operador')
                                                         ->label('Operador')
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->options([
                                                             'mayor' => 'Mayor que (>)',
                                                             'menor' => 'Menor que (<)',
@@ -283,6 +286,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ->label('¿Es obligatorio?')
                                                 ->default(true)
                                                 ->disabled()
+                                                ->dehydrated()
                                                 ->inline(false),
 
                                             Toggle::make('cumple')
