@@ -1,8 +1,12 @@
 <?php
 
 namespace App\Filament\Resources\Inscripcions\Tables;
+use Faker\Core\Color;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\ImageColumn;
@@ -77,6 +81,21 @@ class InscripcionsTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                ActionGroup::make([
+                    Action::make('Abrir Hoja de Inscripción')
+                        ->icon(Heroicon::OutlinedDocumentArrowDown)
+                        ->color('secondary')
+                        ->openUrlInNewTab(),
+                    Action::make('Abrir Hoja de Compromiso')
+                        ->icon(Heroicon::OutlinedDocumentArrowDown)
+                        ->color('secondary')
+                        ->openUrlInNewTab(),
+                    Action::make('Enviar Hojas por Email')
+                        ->icon('heroicon-o-envelope')
+                        ->color('secondary')
+                        ->openUrlInNewTab()
+                ])
+
             ])
 
             ->toolbarActions([

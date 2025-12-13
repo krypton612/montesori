@@ -13,6 +13,7 @@
         "joaopaulolndev/filament-pdf-viewer": "^2.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "muazzam/slick-scrollbar": "^1.0",
         "secondnetwork/blade-tabler-icons": "^3.35",
         "simplesoftwareio/simple-qrcode": "^4.2"
     },
