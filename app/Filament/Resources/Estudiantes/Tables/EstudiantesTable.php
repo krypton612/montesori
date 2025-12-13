@@ -15,6 +15,8 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Filters\TrashedFilter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -38,7 +40,7 @@ class EstudiantesTable
                     ->searchable(['persona.nombre', 'persona.apellido_pat', 'persona.apellido_mat'])
                     ->sortable(['persona.nombre', 'persona.apellido_pat'])
                     ->description(fn ($record): string =>
-                    $record->persona->carnet_identidad ? "CI: {$record->persona->carnet_identidad}" : 'Sin CI'
+                    $record->persona->ci ? "CI: {$record->persona->ci}" : 'Sin CI'
                     )
                     ->icon('heroicon-o-user-circle')
                     ->iconColor('primary')
@@ -198,10 +200,92 @@ class EstudiantesTable
                     ->falseLabel('Sin Eliminados')
                     ->native(false),
 
+                SelectFilter::make('estado_academico')
+                    ->label('Estado Académico')
+                    ->options([
+                        'activo' => '✅ Activo',
+                        'inactivo' => '⏸️ Inactivo',
+                        'graduado' => '🎓 Graduado',
+                        'retirado' => '🚪 Retirado',
+                        'suspendido' => '⛔ Suspendido',
+                        'transferido' => '🔄 Transferido',
+                        'egresado' => '📜 Egresado',
+                    ])
+                    ->native(false)
+                    ->multiple()
+                    ->preload()
+                    ->indicator('Estado'),
 
+                TernaryFilter::make('tiene_discapacidad')
+                    ->label('Discapacidad')
+                    ->placeholder('Todos')
+                    ->trueLabel('Con discapacidad')
+                    ->falseLabel('Sin discapacidad')
+                    ->native(false)
+                    ->indicator('Discapacidad'),
 
+                SelectFilter::make('con_apoderados')
+                    ->label('Apoderados')
+                    ->options([
+                        'con_apoderados' => 'Con apoderados',
+                        'sin_apoderados' => 'Sin apoderados',
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        return $query
+                            ->when(
+                                $data['value'] === 'con_apoderados',
+                                fn (Builder $query) => $query->has('apoderados')
+                            )
+                            ->when(
+                                $data['value'] === 'sin_apoderados',
+                                fn (Builder $query) => $query->doesntHave('apoderados')
+                            );
+                    })
+                    ->native(false)
+                    ->indicator('Apoderados'),
 
-            ])
+                SelectFilter::make('edad')
+                    ->label('Rango de Edad')
+                    ->options([
+                        '0-5'   => '0-5 años (Inicial)',
+                        '6-11'  => '6-11 años (Primaria)',
+                        '12-17' => '12-17 años (Secundaria)',
+                        '18+'   => '18+ años (Superior)',
+                        'null'  => 'Sin edad registrada',
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
+
+                        return match ($data['value']) {
+                            '0-5' => $query->whereHas('persona',
+                                fn ($q) => $q->whereBetween('edad', [0, 5])
+                            ),
+
+                            '6-11' => $query->whereHas('persona',
+                                fn ($q) => $q->whereBetween('edad', [6, 11])
+                            ),
+
+                            '12-17' => $query->whereHas('persona',
+                                fn ($q) => $q->whereBetween('edad', [12, 17])
+                            ),
+
+                            '18+' => $query->whereHas('persona',
+                                fn ($q) => $q->where('edad', '>=', 18)
+                            ),
+
+                            'null' => $query->whereHas('persona',
+                                fn ($q) => $q->whereNull('edad')
+                            ),
+
+                            default => $query,
+                        };
+                    })
+                    ->native(false)
+                    ->indicator('Edad')
+
+        ])
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()
