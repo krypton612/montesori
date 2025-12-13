@@ -6,6 +6,7 @@ use App\Filament\Resources\Grupos\Pages\CreateGrupo;
 use App\Filament\Resources\Grupos\Pages\EditGrupo;
 use App\Filament\Resources\Grupos\Pages\ListGrupos;
 use App\Filament\Resources\Grupos\Pages\ViewGrupo;
+use App\Filament\Resources\Grupos\RelationManagers\InscritosRelationManager;
 use App\Filament\Resources\Grupos\Schemas\GrupoForm;
 use App\Filament\Resources\Grupos\Schemas\GrupoInfolist;
 use App\Filament\Resources\Grupos\Tables\GruposTable;
@@ -44,7 +45,7 @@ class GrupoResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            InscritosRelationManager::class
         ];
     }
 

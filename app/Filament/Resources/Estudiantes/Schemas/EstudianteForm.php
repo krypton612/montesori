@@ -39,7 +39,7 @@ class EstudianteForm
                             )
                             ->getOptionLabelFromRecordUsing(fn (Model $record) =>
                                 "{$record->nombre} {$record->apellido_pat} {$record->apellido_mat}" .
-                                ($record->ci ? " - CI: {$record->ci}" : "")
+                                ($record->carnet_identidad ? " - CI: {$record->carnet_identidad}" : "")
                             )
                             ->required()
                             ->native(false)
@@ -119,6 +119,7 @@ class EstudianteForm
                                 Select::make('estado_academico')
                                     ->label('Estado Académico')
                                     ->options([
+                                        'pendiente_inscripcion' => '🕒 Pendiente de Inscripción',
                                         'activo' => '✅ Activo',
                                         'inactivo' => '⏸️ Inactivo',
                                         'graduado' => '🎓 Graduado',

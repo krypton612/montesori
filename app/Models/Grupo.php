@@ -36,4 +36,8 @@ class Grupo extends Model
         return $this->belongsTo(Gestion::class, 'gestion_id');
     }
 
+    public function inscritos()
+    {
+        return $this->hasMany(Inscripcion::class, 'grupo_id');
+    }
 }

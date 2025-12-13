@@ -26,6 +26,7 @@ class Persona extends Model
         'email_personal',
         'direccion',
         'habilitado',
+        'carnet_identidad',
     ];
 
     // Tipos de datos de los atributos
