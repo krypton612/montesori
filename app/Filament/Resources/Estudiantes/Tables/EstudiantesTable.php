@@ -40,7 +40,7 @@ class EstudiantesTable
                     ->searchable(['persona.nombre', 'persona.apellido_pat', 'persona.apellido_mat'])
                     ->sortable(['persona.nombre', 'persona.apellido_pat'])
                     ->description(fn ($record): string =>
-                    $record->persona->ci ? "CI: {$record->persona->ci}" : 'Sin CI'
+                    $record->persona->carnet_identidad ? "CI: {$record->persona->carnet_identidad}" : 'Sin CI'
                     )
                     ->icon('heroicon-o-user-circle')
                     ->iconColor('primary')

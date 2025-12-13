@@ -74,6 +74,16 @@ class Persona extends Model
         return Carbon::parse($this->fecha_nacimiento)->age;
     }
 
+    public function calcularEdad(): ?int
+    {
+        if (!$this->fecha_nacimiento) {
+            return -1;
+        }
+
+        return Carbon::parse($this->fecha_nacimiento)->age;
+    }
+
+
     protected static function booted(): void
     {
         static::creating(function (Persona $persona) {
