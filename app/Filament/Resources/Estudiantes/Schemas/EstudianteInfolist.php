@@ -43,7 +43,7 @@ class EstudianteInfolist
                                             ->color('primary')
                                             ->placeholder('Sin nombre'),
 
-                                        TextEntry::make('persona.ci')
+                                        TextEntry::make('persona.carnet_identidad')
                                             ->label('Carnet de Identidad')
                                             ->icon('heroicon-o-identification')
                                             ->iconColor('gray')
@@ -260,7 +260,7 @@ class EstudianteInfolist
                                             ->placeholder('Sin teléfono')
                                             ->copyable(),
 
-                                        TextEntry::make('persona.email')
+                                        TextEntry::make('persona.email_personal')
                                             ->label('Email')
                                             ->icon('heroicon-o-envelope')
                                             ->placeholder('Sin email')
@@ -274,7 +274,7 @@ class EstudianteInfolist
                                             ->trueColor('success')
                                             ->falseColor('gray'),
 
-                                        TextEntry::make('persona.ci')
+                                        TextEntry::make('persona.carnet_identidad')
                                             ->label('CI')
                                             ->badge()
                                             ->color('gray')
@@ -306,7 +306,6 @@ class EstudianteInfolist
                                     ->label('Observaciones')
                                     ->icon('heroicon-o-document-text')
                                     ->placeholder('Sin observaciones')
-                                    ->markdown()
                                     ->columnSpanFull(),
                             ])
                             ->contained(true)

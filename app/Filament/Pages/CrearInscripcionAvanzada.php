@@ -90,7 +90,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 $estudiante = Estudiante::with('persona')->find($state);
                                                 if ($estudiante && $estudiante->persona) {
                                                     $set('estudiante_nombre', "{$estudiante->persona->nombre} {$estudiante->persona->apellido_pat} {$estudiante->persona->apellido_mat}");
-                                                    $set('estudiante_ci', $estudiante->persona->ci ?? 'N/A');
+                                                    $set('estudiante_ci', $estudiante->persona->carnet_identidad ?? 'N/A');
                                                     $set('estudiante_codigo', $estudiante->codigo_saga ?? 'N/A');
                                                     $set('estudiante_estado', $estudiante->estado_academico ?? 'N/A');
                                                 }
