@@ -134,14 +134,35 @@
         .footer-info .left { text-align: left; }
         .footer-info .right { text-align: right; }
 
+        .watermark {
+            position: fixed; /* Ojo: Dompdf soporta 'fixed' para elementos en cada página */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1000; /* Asegura que esté detrás del contenido */
+            opacity: 0.15; /* AJUSTA ESTO: 0.15 es semi-transparente */
+            pointer-events: none; /* Deshabilita interacciones (aunque irrelevante en PDF) */
+        }
+
+        .watermark img {
+            width: 70%; /* AJUSTA ESTO: Tamaño de la imagen de fondo */
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centra la imagen */
+        }
     </style>
 </head>
 <body>
-
+<div class="watermark">
+    <img src="{{ $logo_path }}" alt="Marca de Agua">
+</div>
 <table class="header">
     <tr>
         <td class="logo">
-            <img src="{{ $logo_path }}" alt="Logo" style="width: 80px; height: auto;">
+            <img src="{{ $logo_path }}" alt="Logo" style="width: 100px; height: auto;">
         </td>
         <td class="title">
             HOJA DE DATOS PERSONALES

@@ -12,10 +12,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 
@@ -34,13 +33,20 @@ class CursoForm
                                 Section::make()
                                     ->schema([
                                         TextInput::make('seccion')
-                                            ->label('Sección')
+                                            ->label('Codigo Relación')
                                             ->required()
                                             ->maxLength(10)
                                             ->placeholder('Ej: A, B, 1A')
                                             ->helperText('Identificador de la sección del curso')
                                             ->live(onBlur: true)
-                                            ->afterStateUpdated(fn ($state, $set) => $set('seccion', strtoupper($state))),
+                                            ->readOnly()
+                                            ->default(function (Get $get) {
+                                                $lastCurso = Curso::orderBy('id', 'desc')->first();
+                                                $nextId = $lastCurso ? $lastCurso->id + 1 : 1;
+                                                return 'C-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+                                            })
+                                            ,
+                                        
 
                                         Select::make('gestion_id')
                                             ->label('Gestión')
