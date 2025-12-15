@@ -8,19 +8,18 @@ use App\Filament\Inscripcion\Resources\Personas\Pages\ListPersonas;
 use App\Filament\Inscripcion\Resources\Personas\Schemas\PersonaForm;
 use App\Filament\Inscripcion\Resources\Personas\Tables\PersonasTable;
 use App\Models\Persona;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use UnitEnum;
 
 class PersonaResource extends Resource
 {
     protected static ?string $model = Persona::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|UnitEnum|null $navigationGroup = 'Gestion Personas';
 
     protected static ?string $recordTitleAttribute = 'nombre';
 
