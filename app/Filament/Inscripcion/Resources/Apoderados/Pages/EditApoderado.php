@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Apoderados\Pages;
+namespace App\Filament\Inscripcion\Resources\Apoderados\Pages;
 
-use App\Filament\Resources\Apoderados\ApoderadoResource;
+use App\Filament\Inscripcion\Resources\Apoderados\ApoderadoResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;

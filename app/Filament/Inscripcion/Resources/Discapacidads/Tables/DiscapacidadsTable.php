@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Discapacidads\Tables;
+namespace App\Filament\Inscripcion\Resources\Discapacidads\Tables;
 
 use Filament\Tables;
 use Filament\Tables\Table;

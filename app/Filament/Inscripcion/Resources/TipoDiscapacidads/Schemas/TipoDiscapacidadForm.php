@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\TipoDiscapacidads\Schemas;
+namespace App\Filament\Inscripcion\Resources\TipoDiscapacidads\Schemas;
 
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Textarea;

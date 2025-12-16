@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\TipoDiscapacidads\RelationManagers;
+namespace App\Filament\Inscripcion\Resources\TipoDiscapacidads\RelationManagers;
 
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Filament\Resources\Discapacidads;
+namespace App\Filament\Inscripcion\Resources\Discapacidads;
 
-use App\Filament\Resources\Discapacidads\Pages;
-use App\Filament\Resources\Discapacidads\Schemas\DiscapacidadForm;
-use App\Filament\Resources\Discapacidads\Schemas\DiscapacidadInfolist;
-use App\Filament\Resources\Discapacidads\Tables\DiscapacidadsTable;
+use App\Filament\Inscripcion\Resources\Discapacidads\Pages;
+use App\Filament\Inscripcion\Resources\Discapacidads\Schemas\DiscapacidadForm;
+use App\Filament\Inscripcion\Resources\Discapacidads\Schemas\DiscapacidadInfolist;
+use App\Filament\Inscripcion\Resources\Discapacidads\Tables\DiscapacidadsTable;
 use App\Models\Discapacidad;
 use BackedEnum;
 use Filament\Resources\Resource;

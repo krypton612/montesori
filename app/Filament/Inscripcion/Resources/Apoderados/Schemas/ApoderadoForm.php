@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Apoderados\Schemas;
+namespace App\Filament\Inscripcion\Resources\Apoderados\Schemas;
 
 use Filament\Forms;
 use Filament\Schemas\Schema;

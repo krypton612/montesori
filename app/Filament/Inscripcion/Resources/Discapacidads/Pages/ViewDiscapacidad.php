@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Discapacidads\Pages;
+namespace App\Filament\Inscripcion\Resources\Discapacidads\Pages;
 
-use App\Filament\Resources\Discapacidads\DiscapacidadResource;
+use App\Filament\Inscripcion\Resources\Discapacidads\DiscapacidadResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 

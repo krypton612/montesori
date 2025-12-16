@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Apoderados\Tables;
+namespace App\Filament\Inscripcion\Resources\Apoderados\Tables;
 
 use Filament\Tables;
 use Filament\Tables\Table;

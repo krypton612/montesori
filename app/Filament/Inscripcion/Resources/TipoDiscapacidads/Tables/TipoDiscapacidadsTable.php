@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\TipoDiscapacidads\Tables;
+namespace App\Filament\Inscripcion\Resources\TipoDiscapacidads\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;

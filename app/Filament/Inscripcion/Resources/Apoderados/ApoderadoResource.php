@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\Apoderados;
+namespace App\Filament\Inscripcion\Resources\Apoderados;
 
-use App\Filament\Resources\Apoderados\RelationManagers;
-use App\Filament\Resources\Apoderados\Pages\CreateApoderado;
-use App\Filament\Resources\Apoderados\Pages\EditApoderado;
-use App\Filament\Resources\Apoderados\Pages\ListApoderados;
-use App\Filament\Resources\Apoderados\Pages\ViewApoderado;
-use App\Filament\Resources\Apoderados\Schemas\ApoderadoForm;
-use App\Filament\Resources\Apoderados\Schemas\ApoderadoInfolist;
-use App\Filament\Resources\Apoderados\Tables\ApoderadosTable;
+use App\Filament\Inscripcion\Resources\Apoderados\RelationManagers;
+use App\Filament\Inscripcion\Resources\Apoderados\Pages\CreateApoderado;
+use App\Filament\Inscripcion\Resources\Apoderados\Pages\EditApoderado;
+use App\Filament\Inscripcion\Resources\Apoderados\Pages\ListApoderados;
+use App\Filament\Inscripcion\Resources\Apoderados\Pages\ViewApoderado;
+use App\Filament\Inscripcion\Resources\Apoderados\Schemas\ApoderadoForm;
+use App\Filament\Inscripcion\Resources\Apoderados\Schemas\ApoderadoInfolist;
+use App\Filament\Inscripcion\Resources\Apoderados\Tables\ApoderadosTable;
 use App\Models\Apoderado;
 use BackedEnum;
 use Filament\Resources\Resource;

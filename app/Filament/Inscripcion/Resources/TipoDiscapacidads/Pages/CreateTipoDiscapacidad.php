@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\TipoDiscapacidads\Pages;
+namespace App\Filament\Inscripcion\Resources\TipoDiscapacidads\Pages;
 
-use App\Filament\Resources\TipoDiscapacidads\TipoDiscapacidadResource;
+use App\Filament\Inscripcion\Resources\TipoDiscapacidads\TipoDiscapacidadResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateTipoDiscapacidad extends CreateRecord

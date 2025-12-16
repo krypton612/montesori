@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\TipoDiscapacidads;
+namespace App\Filament\Inscripcion\Resources\TipoDiscapacidads;
 
-use App\Filament\Resources\TipoDiscapacidads\RelationManagers\DiscapacidadesRelationManager;
-use App\Filament\Resources\TipoDiscapacidads\Pages\CreateTipoDiscapacidad;
-use App\Filament\Resources\TipoDiscapacidads\Pages\EditTipoDiscapacidad;
-use App\Filament\Resources\TipoDiscapacidads\Pages\ListTipoDiscapacidads;
-use App\Filament\Resources\TipoDiscapacidads\Pages\ViewTipoDiscapacidad;
-use App\Filament\Resources\TipoDiscapacidads\Schemas\TipoDiscapacidadForm;
-use App\Filament\Resources\TipoDiscapacidads\Schemas\TipoDiscapacidadInfolist;
-use App\Filament\Resources\TipoDiscapacidads\Tables\TipoDiscapacidadsTable;
+use App\Filament\Inscripcion\Resources\TipoDiscapacidads\RelationManagers\DiscapacidadesRelationManager;
+use App\Filament\Inscripcion\Resources\TipoDiscapacidads\Pages\CreateTipoDiscapacidad;
+use App\Filament\Inscripcion\Resources\TipoDiscapacidads\Pages\EditTipoDiscapacidad;
+use App\Filament\Inscripcion\Resources\TipoDiscapacidads\Pages\ListTipoDiscapacidads;
+use App\Filament\Inscripcion\Resources\TipoDiscapacidads\Pages\ViewTipoDiscapacidad;
+use App\Filament\Inscripcion\Resources\TipoDiscapacidads\Schemas\TipoDiscapacidadForm;
+use App\Filament\Inscripcion\Resources\TipoDiscapacidads\Schemas\TipoDiscapacidadInfolist;
+use App\Filament\Inscripcion\Resources\TipoDiscapacidads\Tables\TipoDiscapacidadsTable;
 use App\Models\TipoDiscapacidad;
 use BackedEnum;
 use Filament\Resources\Resource;

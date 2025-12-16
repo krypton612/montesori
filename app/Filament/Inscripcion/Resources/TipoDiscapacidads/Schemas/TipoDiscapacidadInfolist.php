@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\TipoDiscapacidads\Schemas;
+namespace App\Filament\Inscripcion\Resources\TipoDiscapacidads\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Discapacidads\Schemas;
+namespace App\Filament\Inscripcion\Resources\Discapacidads\Schemas;
 
 use Filament\Infolists\Components\IconEntry;
 use Filament\Schemas\Components\Section;
