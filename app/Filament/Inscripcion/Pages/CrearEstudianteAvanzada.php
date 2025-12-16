@@ -25,12 +25,13 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\QueryException;
+
 
 class CrearEstudianteAvanzada extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    // Sugerido para panel inscripcion (cambia si tu blade está en otro lugar)
     protected string $view = 'filament.pages.crear-estudiante-avanzada';
 
     protected static string|null|\UnitEnum $navigationGroup = 'Inscripcion Estudiantil';
@@ -44,6 +45,20 @@ class CrearEstudianteAvanzada extends Page implements HasForms
         $this->form->fill();
     }
 
+    // =========================================================
+    //  Helpers para que los errores se vean en inputs (statePath)
+    // =========================================================
+
+    protected function prefixStatePathErrors(array $errors): array
+    {
+        $prefixed = [];
+        foreach ($errors as $key => $message) {
+            $k = str_starts_with($key, 'data.') ? $key : "data.$key";
+            $prefixed[$k] = $message;
+        }
+        return $prefixed;
+    }
+
     protected function fail(string $title, string $body, array $fieldErrors = []): void
     {
         Notification::make()
@@ -54,30 +69,138 @@ class CrearEstudianteAvanzada extends Page implements HasForms
             ->send();
 
         if (!empty($fieldErrors)) {
-            throw ValidationException::withMessages($fieldErrors);
+            throw ValidationException::withMessages($this->prefixStatePathErrors($fieldErrors));
         }
 
         throw new Halt();
     }
 
     /**
-     * Restricciones extra (panel Inscripción) + mensajes claros.
+     * Para Wizard Next: NUNCA uses addError() + Halt,
+     * porque puede frenar el paso sin pintar errores.
+     * Esto garantiza errores visibles en los campos.
      */
-    protected function validateRestricciones(array $data): void
+    protected function failStep(string $title, string $body, array $fieldErrors = []): void
     {
+        Notification::make()
+            ->title($title)
+            ->body($body)
+            ->danger()
+            ->persistent()
+            ->send();
+
+        throw ValidationException::withMessages(
+            $this->prefixStatePathErrors($fieldErrors ?: ['_step' => 'No se puede continuar. Revise los campos.'])
+        );
+    }
+
+    // =========================
+    // Normalizadores / validadores
+    // =========================
+
+    protected function normalizeSpaces(?string $value): string
+    {
+        $value = trim((string) $value);
+        return preg_replace('/\s+/u', ' ', $value) ?: '';
+    }
+
+    protected function containsAccents(string $value): bool
+    {
+        return (bool) preg_match('/[ÁÉÍÓÚáéíóúÜü]/u', $value);
+    }
+
+    protected function isValidBoliviaName(string $value): bool
+    {
+        // Solo letras sin tildes, espacios, guion y apóstrofe. Permite Ñ/ñ.
+        return (bool) preg_match("/^[A-Za-zÑñ\s'\-]+$/u", $value);
+    }
+
+    /**
+     * Normaliza teléfonos Bolivia:
+     * - quita espacios/guiones/paréntesis
+     * - quita prefijo +591 o 591 si viene
+     * - devuelve solo dígitos o null
+     */
+    protected function normalizeBoliviaMobile($value): ?string
+    {
+        $v = trim((string) ($value ?? ''));
+        if ($v === '') return null;
+
+        $digits = preg_replace('/\D+/', '', $v);
+
+        if (str_starts_with($digits, '591')) {
+            $digits = substr($digits, 3);
+        }
+
+        return $digits === '' ? null : $digits;
+    }
+
+    protected function isValidBoliviaMobile(?string $digits): bool
+    {
+        if (empty($digits)) return false;
+        // Bolivia móvil: 8 dígitos y comienza con 6 o 7
+        return (bool) preg_match('/^[67]\d{7}$/', $digits);
+    }
+
+    protected function normalizeCiDigits($value): string
+    {
+        return preg_replace('/\D+/', '', (string) ($value ?? ''));
+    }
+
+    protected function isValidCi(string $ci): bool
+    {
+        return (bool) preg_match('/^\d{8,12}$/', $ci);
+    }
+
+    // =========================================================
+    //  VALIDACIONES EN CADA NEXT (Wizard)
+    // =========================================================
+
+    protected function validateStepDatosPersonales(): void
+    {
+        $data = (array) ($this->data ?? []);
         $errors = [];
 
-        // ===== 1) Validaciones básicas + formato =====
-        $ci = trim((string)($data['carnet_identidad'] ?? ''));
-        if ($ci === '') {
-            $errors['carnet_identidad'] = 'Debe ingresar el Carnet de Identidad.';
-        } else {
-            // Permite números/letras + guion/espacio (por complementos)
-            if (!preg_match('/^[A-Za-z0-9\-\s\.]{4,20}$/', $ci)) {
-                $errors['carnet_identidad'] = 'El CI tiene un formato inválido (use números/letras, guiones o espacios).';
+        // normalizaciones suaves
+        foreach (['nombre', 'apellido_pat', 'apellido_mat', 'direccion'] as $f) {
+            if (isset($data[$f])) {
+                $data[$f] = $this->normalizeSpaces($data[$f]);
             }
         }
 
+        // nombres sin tildes + formato
+        foreach (['nombre' => 'Nombre', 'apellido_pat' => 'Apellido Paterno', 'apellido_mat' => 'Apellido Materno'] as $field => $label) {
+            $val = trim((string) ($data[$field] ?? ''));
+
+            if ($field !== 'apellido_mat' && $val === '') {
+                $errors[$field] = "Debe ingresar el {$label}.";
+                continue;
+            }
+
+            if ($val !== '') {
+                if ($this->containsAccents($val)) {
+                    $errors[$field] = "{$label}: no use tildes/acentos (ej: José → Jose).";
+                } elseif (!$this->isValidBoliviaName($val)) {
+                    $errors[$field] = "{$label}: solo letras, espacios, guion o apóstrofe (sin números).";
+                } elseif (mb_strlen($val) < 2) {
+                    $errors[$field] = "{$label}: es demasiado corto.";
+                }
+            }
+        }
+
+        // CI estudiante: numérico >= 8
+        $ci = $this->normalizeCiDigits($data['carnet_identidad'] ?? null);
+        $data['carnet_identidad'] = $ci;
+
+        if ($ci === '' || !$this->isValidCi($ci)) {
+            $errors['carnet_identidad'] = 'El CI debe contener solo números y tener al menos 8 dígitos (máx. 12).';
+        } else {
+            if (Persona::where('carnet_identidad', $ci)->exists()) {
+                $errors['carnet_identidad'] = 'Ya existe una persona registrada con este CI.';
+            }
+        }
+
+        // fecha nacimiento estudiante: >= 10 años
         $fechaNac = $data['fecha_nacimiento'] ?? null;
         if (empty($fechaNac)) {
             $errors['fecha_nacimiento'] = 'Debe ingresar la fecha de nacimiento.';
@@ -86,8 +209,9 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                 $fn = Carbon::parse($fechaNac)->startOfDay();
                 if ($fn->greaterThan(Carbon::today())) {
                     $errors['fecha_nacimiento'] = 'La fecha de nacimiento no puede ser futura.';
-                }
-                if ($fn->lessThan(Carbon::today()->subYears(120))) {
+                } elseif ($fn->greaterThan(Carbon::today()->subYears(10))) {
+                    $errors['fecha_nacimiento'] = 'El estudiante debe tener al menos 10 años.';
+                } elseif ($fn->lessThan(Carbon::today()->subYears(120))) {
                     $errors['fecha_nacimiento'] = 'La fecha de nacimiento parece inválida (muy antigua).';
                 }
             } catch (\Throwable $e) {
@@ -95,31 +219,60 @@ class CrearEstudianteAvanzada extends Page implements HasForms
             }
         }
 
-        $tel = trim((string)($data['telefono_principal'] ?? ''));
-        if ($tel !== '' && !preg_match('/^[0-9+\-\s()]{6,20}$/', $tel)) {
-            $errors['telefono_principal'] = 'El teléfono principal tiene un formato inválido.';
+        // teléfonos estudiante: Bolivia móvil normalizado
+        $tel1 = $this->normalizeBoliviaMobile($data['telefono_principal'] ?? null);
+        $data['telefono_principal'] = $tel1;
+
+        if (empty($tel1)) {
+            $errors['telefono_principal'] = 'Debe ingresar el teléfono principal.';
+        } elseif (!$this->isValidBoliviaMobile($tel1)) {
+            $errors['telefono_principal'] = 'Teléfono principal inválido: 8 dígitos y debe empezar con 6 o 7 (Bolivia).';
         }
 
-        $email = trim((string)($data['email_personal'] ?? ''));
+        $tel2 = $this->normalizeBoliviaMobile($data['telefono_secundario'] ?? null);
+        $data['telefono_secundario'] = $tel2;
+
+        if (!empty($tel2) && !$this->isValidBoliviaMobile($tel2)) {
+            $errors['telefono_secundario'] = 'Teléfono secundario inválido: 8 dígitos y debe empezar con 6 o 7 (Bolivia).';
+        }
+
+        // email
+        $email = trim((string) ($data['email_personal'] ?? ''));
         if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors['email_personal'] = 'El correo electrónico no es válido.';
         }
 
-        // ===== 2) Estado académico (regla del panel Inscripción) =====
-        // En este panel: registrar estudiante = "pendiente_inscripcion".
-        if (($data['estado_academico'] ?? null) === 'inscrito') {
-            $errors['estado_academico'] = 'No puede registrar como "Inscrito" aquí. Use la página de Inscripción para inscribir.';
+        // Email único en persona (si viene)
+        if ($email !== '' && Persona::where('email_personal', $email)->exists()) {
+            $errors['email_personal'] = 'Este correo ya está registrado en otra persona.';
         }
 
-        // ===== 3) Discapacidad: si marca tiene_discapacidad, exige mínimo 1 =====
-        $tieneDis = (bool)($data['tiene_discapacidad'] ?? false);
+        // guarda normalizaciones en el estado livewire
+        $this->data = array_merge($this->data ?? [], $data);
+
+        if (!empty($errors)) {
+            $this->failStep('No se puede continuar', 'Corrija los campos marcados para avanzar.', $errors);
+        }
+    }
+
+    protected function validateStepDetallesEducativos(): void
+    {
+        $data = (array) ($this->data ?? []);
+        $errors = [];
+
+        // Estado académico: aquí NO inscrito
+        if (($data['estado_academico'] ?? null) === 'inscrito') {
+            $errors['estado_academico'] = 'No puede registrar como "Inscrito" aquí. Use la página de Inscripción.';
+        }
+
+        // Discapacidad: si marca, exige lista + sin duplicados
+        $tieneDis = (bool) ($data['tiene_discapacidad'] ?? false);
         $discs = collect($data['discapacidades'] ?? []);
 
         if ($tieneDis) {
             if ($discs->isEmpty()) {
                 $errors['discapacidades'] = 'Marcó "Tiene Discapacidad", pero no agregó ninguna.';
             } else {
-                // No duplicados
                 $ids = $discs->pluck('discapacidad_id')->filter()->values();
                 if ($ids->count() !== $ids->unique()->count()) {
                     $errors['discapacidades'] = 'No puede repetir la misma discapacidad más de una vez.';
@@ -127,13 +280,32 @@ class CrearEstudianteAvanzada extends Page implements HasForms
             }
         }
 
-        // ===== 4) Apoderados: mínimo 1 + EXACTAMENTE 1 principal + sin duplicados =====
+        if (!empty($errors)) {
+            $this->failStep('No se puede continuar', 'Revise los campos marcados para avanzar.', $errors);
+        }
+    }
+
+    protected function validateStepApoderados(): void
+    {
+        $data = (array) ($this->data ?? []);
+        $errors = [];
+
+        $ciEst = $this->normalizeCiDigits($data['carnet_identidad'] ?? null);
+
         $apods = collect($data['apoderados'] ?? []);
         if ($apods->isEmpty()) {
             $errors['apoderados'] = 'Debe registrar al menos un apoderado.';
         } else {
-            // Duplicados por CI en el formulario
-            $cisApods = $apods->map(fn ($a) => trim((string)($a['apod_carnet_identidad'] ?? '')))
+            // EXACTAMENTE 1 principal
+            $principalCount = $apods->filter(fn ($a) => (bool) ($a['apod_es_principal'] ?? false))->count();
+            if ($principalCount === 0) {
+                $errors['apoderados'] = 'Debe marcar exactamente 1 apoderado como principal.';
+            } elseif ($principalCount > 1) {
+                $errors['apoderados'] = 'Solo puede existir 1 apoderado principal. Desmarque los demás.';
+            }
+
+            // Duplicados por CI
+            $cisApods = $apods->map(fn ($a) => $this->normalizeCiDigits($a['apod_carnet_identidad'] ?? null))
                 ->filter()
                 ->values();
 
@@ -142,66 +314,159 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                 $errors['apoderados'] = 'No puede repetir el mismo CI en apoderados: ' . $duplicados->implode(', ');
             }
 
-            // El apoderado NO puede tener el mismo CI que el estudiante
-            if ($ci !== '' && $cisApods->contains($ci)) {
+            // apoderado CI != estudiante CI
+            if ($ciEst !== '' && $cisApods->contains($ciEst)) {
                 $errors['apoderados'] = 'El CI del apoderado no puede ser igual al CI del estudiante.';
             }
 
-            // Exactamente 1 principal
-            $principalCount = $apods->filter(fn ($a) => (bool)($a['apod_es_principal'] ?? false))->count();
-            if ($principalCount === 0) {
-                $errors['apoderados'] = 'Debe marcar exactamente 1 apoderado como principal.';
-            }
-            if ($principalCount > 1) {
-                $errors['apoderados'] = 'Solo puede existir 1 apoderado principal. Desmarque los demás.';
-            }
+            foreach (($data['apoderados'] ?? []) as $i => $ap) {
+                // normaliza nombres
+                foreach (['apod_nombre', 'apod_apellido_pat', 'apod_apellido_mat'] as $nf) {
+                    if (isset($data['apoderados'][$i][$nf])) {
+                        $data['apoderados'][$i][$nf] = $this->normalizeSpaces($data['apoderados'][$i][$nf]);
+                    }
+                }
 
-            // Validar apoderado principal habilitado (si el usuario lo marcó deshabilitado)
-            $idxPrincipal = $apods->search(fn ($a) => (bool)($a['apod_es_principal'] ?? false));
-            if ($idxPrincipal !== false) {
-                $habil = (bool)($apods[$idxPrincipal]['apod_habilitado'] ?? true);
-                if (!$habil) {
-                    $errors["apoderados.$idxPrincipal.apod_habilitado"] = 'El apoderado principal no puede estar inhabilitado.';
+                // nombres sin tildes + formato
+                foreach ([
+                    'apod_nombre' => 'Nombre del apoderado',
+                    'apod_apellido_pat' => 'Apellido paterno del apoderado',
+                    'apod_apellido_mat' => 'Apellido materno del apoderado',
+                ] as $f => $lbl) {
+                    $v = trim((string) ($data['apoderados'][$i][$f] ?? ''));
+
+                    if ($f !== 'apod_apellido_mat' && $v === '') {
+                        $errors["apoderados.$i.$f"] = "Debe ingresar: {$lbl}.";
+                        continue;
+                    }
+
+                    if ($v !== '') {
+                        if ($this->containsAccents($v)) {
+                            $errors["apoderados.$i.$f"] = "{$lbl}: no use tildes/acentos (ej: José → Jose).";
+                        } elseif (!$this->isValidBoliviaName($v)) {
+                            $errors["apoderados.$i.$f"] = "{$lbl}: solo letras, espacios, guion o apóstrofe (sin números).";
+                        }
+                    }
+                }
+
+                // CI apoderado
+                $ciAp = $this->normalizeCiDigits($data['apoderados'][$i]['apod_carnet_identidad'] ?? null);
+                $data['apoderados'][$i]['apod_carnet_identidad'] = $ciAp;
+
+                if ($ciAp === '' || !$this->isValidCi($ciAp)) {
+                    $errors["apoderados.$i.apod_carnet_identidad"] = 'CI apoderado inválido: solo números, mínimo 8 dígitos (máx. 12).';
+                } else {
+                    $personaAp = Persona::where('carnet_identidad', $ciAp)->first();
+                    if ($personaAp && $personaAp->habilitado === false) {
+                        $errors["apoderados.$i.apod_carnet_identidad"] = 'Este CI pertenece a una persona inhabilitada. No se puede usar.';
+                    }
+                }
+
+                // Fecha nacimiento apoderado: requerida + >= 18
+                $fnAp = $data['apoderados'][$i]['apod_fecha_nacimiento'] ?? null;
+                if (empty($fnAp)) {
+                    $errors["apoderados.$i.apod_fecha_nacimiento"] = 'Debe ingresar la fecha de nacimiento del apoderado (para validar mayoría de edad).';
+                } else {
+                    try {
+                        $dAp = Carbon::parse($fnAp)->startOfDay();
+                        if ($dAp->greaterThan(Carbon::today())) {
+                            $errors["apoderados.$i.apod_fecha_nacimiento"] = 'La fecha de nacimiento del apoderado no puede ser futura.';
+                        } elseif ($dAp->greaterThan(Carbon::today()->subYears(18))) {
+                            $errors["apoderados.$i.apod_fecha_nacimiento"] = 'El apoderado debe ser mayor de 18 años.';
+                        } elseif ($dAp->lessThan(Carbon::today()->subYears(120))) {
+                            $errors["apoderados.$i.apod_fecha_nacimiento"] = 'La fecha de nacimiento del apoderado parece inválida (muy antigua).';
+                        }
+                    } catch (\Throwable $e) {
+                        $errors["apoderados.$i.apod_fecha_nacimiento"] = 'Fecha de nacimiento del apoderado inválida.';
+                    }
+                }
+
+                // Teléfonos apoderado
+                $tAp1 = $this->normalizeBoliviaMobile($data['apoderados'][$i]['apod_telefono_principal'] ?? null);
+                $data['apoderados'][$i]['apod_telefono_principal'] = $tAp1;
+
+                if (empty($tAp1)) {
+                    $errors["apoderados.$i.apod_telefono_principal"] = 'Debe ingresar el teléfono principal del apoderado.';
+                } elseif (!$this->isValidBoliviaMobile($tAp1)) {
+                    $errors["apoderados.$i.apod_telefono_principal"] = 'Teléfono inválido: 8 dígitos y debe empezar con 6 o 7 (Bolivia).';
+                }
+
+                $tAp2 = $this->normalizeBoliviaMobile($data['apoderados'][$i]['apod_telefono_secundario'] ?? null);
+                $data['apoderados'][$i]['apod_telefono_secundario'] = $tAp2;
+
+                if (!empty($tAp2) && !$this->isValidBoliviaMobile($tAp2)) {
+                    $errors["apoderados.$i.apod_telefono_secundario"] = 'Teléfono secundario inválido: 8 dígitos y debe empezar con 6 o 7 (Bolivia).';
+                }
+
+                // Email apoderado
+                $emailAp = trim((string) ($data['apoderados'][$i]['apod_email_personal'] ?? ''));
+                if ($emailAp !== '' && !filter_var($emailAp, FILTER_VALIDATE_EMAIL)) {
+                    $errors["apoderados.$i.apod_email_personal"] = 'Correo del apoderado no es válido.';
+                }
+
+                // Parentesco requerido (doble seguro)
+                if (empty($data['apoderados'][$i]['apod_parentesco'] ?? null)) {
+                    $errors["apoderados.$i.apod_parentesco"] = 'Debe seleccionar el parentesco.';
+                }
+
+                // Principal no puede estar inhabilitado
+                $esPrincipal = (bool) ($data['apoderados'][$i]['apod_es_principal'] ?? false);
+                $habil = (bool) ($data['apoderados'][$i]['apod_habilitado'] ?? true);
+                if ($esPrincipal && !$habil) {
+                    $errors["apoderados.$i.apod_habilitado"] = 'El apoderado principal no puede estar inhabilitado.';
                 }
             }
         }
 
-        // ===== 5) Pre-chequeo en BD: CI estudiante ya existe (por si hay race condition) =====
-        if ($ci !== '') {
-            $yaExistePersona = Persona::where('carnet_identidad', $ci)->exists();
-            if ($yaExistePersona) {
+        // guarda normalizaciones
+        $this->data = array_merge($this->data ?? [], $data);
+
+        if (!empty($errors)) {
+            $this->failStep('No se puede continuar', 'Corrija los campos marcados para avanzar.', $errors);
+        }
+    }
+
+    // =========================================================
+    // VALIDACIÓN FINAL (Submit)
+    // =========================================================
+    protected function validateRestricciones(array &$data): void
+    {
+        // Aprovechamos que los Next ya validan, aquí solo hacemos un “re-chequeo” global.
+        // (por si alguien intenta saltarse algo con requests manuales)
+
+        $errors = [];
+
+        $ci = $this->normalizeCiDigits($data['carnet_identidad'] ?? null);
+        $data['carnet_identidad'] = $ci;
+
+        if ($ci === '' || !$this->isValidCi($ci)) {
+            $errors['carnet_identidad'] = 'El CI debe contener solo números y tener al menos 8 dígitos (máx. 12).';
+        } else {
+            if (Persona::where('carnet_identidad', $ci)->exists()) {
                 $errors['carnet_identidad'] = 'Ya existe una persona registrada con este CI.';
             }
         }
 
-        // ===== 6) Pre-chequeo en BD: apoderados existentes inhabilitados =====
-        // (si ya existe la persona por CI y está inhabilitada, bloquea)
-        foreach (collect($data['apoderados'] ?? [])->values() as $i => $ap) {
-            $ciAp = trim((string)($ap['apod_carnet_identidad'] ?? ''));
-            if ($ciAp === '') continue;
+        // Estado académico: en este panel NO puede quedar inscrito
+        if (($data['estado_academico'] ?? null) === 'inscrito') {
+            $errors['estado_academico'] = 'No puede registrar como "Inscrito" aquí. Use la página de Inscripción para inscribir.';
+        }
 
-            $personaAp = Persona::where('carnet_identidad', $ciAp)->first();
-            if ($personaAp && $personaAp->habilitado === false) {
-                $errors["apoderados.$i.apod_carnet_identidad"] = 'Este CI pertenece a una persona inhabilitada. No se puede usar.';
-            }
-
-            // Fecha nacimiento apoderado no futura (si viene)
-            $fnAp = $ap['apod_fecha_nacimiento'] ?? null;
-            if (!empty($fnAp)) {
-                try {
-                    if (Carbon::parse($fnAp)->startOfDay()->greaterThan(Carbon::today())) {
-                        $errors["apoderados.$i.apod_fecha_nacimiento"] = 'La fecha de nacimiento del apoderado no puede ser futura.';
-                    }
-                } catch (\Throwable $e) {
-                    $errors["apoderados.$i.apod_fecha_nacimiento"] = 'Fecha de nacimiento del apoderado inválida.';
-                }
-            }
+        // Apoderados: exactamente 1 principal (doble seguro)
+        $apoderados = $data['apoderados'] ?? [];
+        $principalCount = collect($apoderados)->filter(fn ($a) => (bool) ($a['apod_es_principal'] ?? false))->count();
+        if ($principalCount !== 1) {
+            $errors['apoderados'] = 'Debe existir exactamente 1 apoderado principal.';
         }
 
         if (!empty($errors)) {
             $this->fail('No se puede registrar', 'Corrija los campos marcados para continuar.', $errors);
         }
     }
+
+    // =========================================================
+    // FORM
+    // =========================================================
 
     public function form(Schema $form): Schema
     {
@@ -211,6 +476,7 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                     Wizard\Step::make('Datos Personales')
                         ->description('Ingrese la información personal del estudiante.')
                         ->icon('heroicon-o-user')
+                        ->afterValidation(fn () => $this->validateStepDatosPersonales())
                         ->schema([
                             Section::make('Información Personal')
                                 ->icon(Heroicon::OutlinedUser)
@@ -293,6 +559,7 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                     Wizard\Step::make('Detalles Educativos')
                         ->icon(Heroicon::OutlinedAcademicCap)
                         ->description('Proporcione los detalles educativos del estudiante.')
+                        ->afterValidation(fn () => $this->validateStepDetallesEducativos())
                         ->schema([
                             FileUpload::make('foto_url')
                                 ->label('Foto del Estudiante')
@@ -388,22 +655,21 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                                             \App\Models\Discapacidad::find($state['discapacidad_id'] ?? null)?->nombre ?? 'Nueva discapacidad'
                                         )
                                         ->columnSpanFull()
-                                        ->reorderable(false)
-                                        ->deleteAction(fn (Action $action) => $action
-                                            ->requiresConfirmation()
-                                            ->modalHeading('Eliminar Discapacidad')
-                                            ->modalDescription('¿Está seguro de que desea eliminar esta discapacidad?')
-                                        ),
+                                        ->reorderable(false),
                                 ]),
                         ]),
 
+                    // ==========================================
+                    //  STEP APODERADOS (TU ESTRUCTURA ORIGINAL)
+                    // ==========================================
                     Wizard\Step::make('Apoderados')
                         ->icon(Heroicon::OutlinedUserGroup)
                         ->description('Ingrese la información de los apoderados del estudiante.')
+                        ->afterValidation(fn () => $this->validateStepApoderados())
                         ->schema([
                             Section::make('Información de Apoderados')
                                 ->icon(Heroicon::OutlinedUserGroup)
-                                ->description('El estudiante debe tener al menos un apoderado y exactamente uno principal.')
+                                ->description('El estudiante debe tener al menos un apoderado registrado.')
                                 ->schema([
                                     Repeater::make('apoderados')
                                         ->label('Apoderados del Estudiante')
@@ -572,15 +838,10 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                                                         ->onIcon(Heroicon::OutlinedStar)
                                                         ->offIcon(Heroicon::Star)
                                                         ->default(false)
-                                                        ->helperText('Debe existir exactamente 1 apoderado principal')
+                                                        ->helperText('Solo puede haber un apoderado principal')
                                                         ->inline(false),
                                                 ]),
                                         ])
-                                        ->deleteAction(fn (Action $action) => $action
-                                            ->requiresConfirmation()
-                                            ->modalHeading('Eliminar Apoderado')
-                                            ->modalDescription('¿Está seguro de eliminar este apoderado?')
-                                        )
                                         ->addActionLabel('Agregar Otro Apoderado')
                                         ->reorderableWithButtons()
                                         ->columnSpanFull(),
@@ -595,17 +856,29 @@ class CrearEstudianteAvanzada extends Page implements HasForms
             ->statePath('data');
     }
 
+    // =========================================================
+    // CREATE
+    // =========================================================
+
     public function create(): void
     {
         try {
             $data = $this->form->getState();
 
-            // NUEVAS RESTRICCIONES (con mensajes)
+            // Asegura que también al SUBMIT se validen las reglas de cada paso
+            $this->data = $data;
+            $this->validateStepDatosPersonales();
+            $this->validateStepDetallesEducativos();
+            $this->validateStepApoderados();
+
+            // Recupera data ya normalizada por los steps
+            $data = (array) ($this->data ?? []);
+
+            // (Opcional) Re-chequeo final si lo usas
             $this->validateRestricciones($data);
 
             DB::beginTransaction();
 
-            // 1) Crear Persona del Estudiante
             $personaEstudiante = Persona::create([
                 'nombre' => $data['nombre'],
                 'apellido_pat' => $data['apellido_pat'],
@@ -619,7 +892,6 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                 'habilitado' => $data['habilitado'] ?? true,
             ]);
 
-            // 2) Crear Estudiante (forzamos pendiente en este panel)
             $estudiante = Estudiante::create([
                 'persona_id' => $personaEstudiante->id,
                 'codigo_saga' => $data['codigo_saga'],
@@ -629,7 +901,6 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                 'foto_url' => $data['foto_url'] ?? null,
             ]);
 
-            // 3) Asociar Discapacidades
             if (!empty($data['discapacidades']) && ($data['tiene_discapacidad'] ?? false)) {
                 foreach ($data['discapacidades'] as $discapacidad) {
                     if (isset($discapacidad['discapacidad_id'])) {
@@ -641,27 +912,16 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                 }
             }
 
-            // 4) Crear Apoderados + Relaciones (exigimos exactamente 1 principal)
             $apoderados = $data['apoderados'] ?? [];
-            $principalCount = collect($apoderados)->filter(fn ($a) => (bool)($a['apod_es_principal'] ?? false))->count();
-            if ($principalCount !== 1) {
-                $this->fail('Apoderado principal', 'Debe marcar exactamente 1 apoderado como principal.', [
-                    'apoderados' => 'Debe existir exactamente 1 apoderado principal.',
-                ]);
-            }
-
             foreach ($apoderados as $apoderadoData) {
-                $ciAp = trim((string)($apoderadoData['apod_carnet_identidad'] ?? ''));
+                $ciAp = preg_replace('/\D+/', '', (string) ($apoderadoData['apod_carnet_identidad'] ?? ''));
 
-                // Buscar persona por CI
                 $personaApoderado = Persona::where('carnet_identidad', $ciAp)->first();
 
-                // Si existe y está inhabilitada, bloquear
                 if ($personaApoderado && $personaApoderado->habilitado === false) {
                     $this->fail('Apoderado inhabilitado', "El CI {$ciAp} pertenece a una persona inhabilitada. No se puede usar.");
                 }
 
-                // Si no existe, crear persona
                 if (!$personaApoderado) {
                     $personaApoderado = Persona::create([
                         'nombre' => $apoderadoData['apod_nombre'],
@@ -669,15 +929,14 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                         'apellido_mat' => $apoderadoData['apod_apellido_mat'] ?? null,
                         'carnet_identidad' => $ciAp,
                         'fecha_nacimiento' => $apoderadoData['apod_fecha_nacimiento'] ?? null,
-                        'telefono_principal' => $apoderadoData['apod_telefono_principal'],
-                        'telefono_secundario' => $apoderadoData['apod_telefono_secundario'] ?? null,
+                        'telefono_principal' => $this->normalizeBoliviaMobile($apoderadoData['apod_telefono_principal'] ?? null),
+                        'telefono_secundario' => $this->normalizeBoliviaMobile($apoderadoData['apod_telefono_secundario'] ?? null),
                         'email_personal' => $apoderadoData['apod_email_personal'] ?? null,
                         'direccion' => $apoderadoData['apod_direccion'] ?? null,
                         'habilitado' => $apoderadoData['apod_habilitado'] ?? true,
                     ]);
                 }
 
-                // Buscar o crear apoderado
                 $apoderado = Apoderado::where('persona_id', $personaApoderado->id)->first();
                 if (!$apoderado) {
                     $apoderado = Apoderado::create([
@@ -690,11 +949,10 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                     ]);
                 }
 
-                // Relacionar (pivot)
                 $estudiante->apoderados()->attach($apoderado->id, [
                     'parentestco' => $apoderadoData['apod_parentesco'],
                     'vive_con_el' => $apoderadoData['apod_vive_con_el'] ?? false,
-                    'es_principal' => (bool)($apoderadoData['apod_es_principal'] ?? false),
+                    'es_principal' => (bool) ($apoderadoData['apod_es_principal'] ?? false),
                 ]);
             }
 
@@ -708,20 +966,69 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                 ->send();
 
             $this->form->fill();
-
-            // Panel Inscripción
             $this->redirect(route('filament.inscripcion.resources.estudiantes.index'));
-        } catch (Halt $exception) {
-            return;
-        } catch (ValidationException $e) {
+        }
+        // ✅ convierte UNIQUE violation en error de campo (como los demás)
+        catch (QueryException $e) {
+            DB::rollBack();
+
+            $sqlState = $e->errorInfo[0] ?? null; // en Postgres: 23505 = unique_violation
+            $msg = $e->getMessage();
+
+            if ($sqlState === '23505') {
+                $errors = [];
+
+                // Extrae el valor duplicado si viene en el mensaje
+                $dupEmail = null;
+                if (preg_match('/Key \(email_personal\)=\(([^)]+)\)/', $msg, $m)) {
+                    $dupEmail = $m[1];
+                }
+
+                if (str_contains($msg, 'persona_email_personal_unique')) {
+                    // ¿dup pertenece al estudiante?
+                    if ($dupEmail && (($this->data['email_personal'] ?? null) === $dupEmail)) {
+                        $errors['email_personal'] = 'Este correo ya está registrado en otra persona.';
+                    } else {
+                        // busca en apoderados cuál fue
+                        foreach (($this->data['apoderados'] ?? []) as $i => $ap) {
+                            if (($ap['apod_email_personal'] ?? null) === $dupEmail) {
+                                $errors["apoderados.$i.apod_email_personal"] = 'Este correo ya está registrado en otra persona.';
+                            }
+                        }
+                    }
+
+                    // fallback por si no pudo detectar
+                    if (empty($errors)) {
+                        $errors['email_personal'] = 'El correo ya está registrado en otra persona.';
+                    }
+
+                    $this->fail('No se puede registrar', 'Corrija los campos marcados para continuar.', $errors);
+                }
+
+                // otras uniques (por si acaso)
+                $this->fail('No se puede registrar', 'Hay datos duplicados (restricción de unicidad). Revise los campos.', [
+                    '_db' => 'Existe un registro con datos duplicados. Revise CI / correo.',
+                ]);
+            }
+
+            // si no es 23505, muestra genérico sin SQL
+            Notification::make()
+                ->title('Error al registrar estudiante')
+                ->danger()
+                ->body('Ocurrió un error inesperado al guardar.')
+                ->persistent()
+                ->send();
+        }
+        catch (ValidationException $e) {
             throw $e;
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             DB::rollBack();
 
             Notification::make()
                 ->title('Error al registrar estudiante')
                 ->danger()
-                ->body('Ocurrió un error: ' . $e->getMessage())
+                ->body('Ocurrió un error inesperado.')
                 ->persistent()
                 ->send();
 
