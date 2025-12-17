@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Components\QrCode;
 use App\Filament\Fields\QrCodeView;
+use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\Gestion;
 use App\Models\Grupo;
@@ -177,7 +178,6 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ]);
                                         })
                                         ->searchable()
-                                        ->required()
                                         ->live()
                                         ->afterStateUpdated(function (callable $set, $state) {
                                             if ($state) {
@@ -226,6 +226,39 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->hidden(fn (Get $get) => !filled($get('grupo_id')))
                                         ->columnSpanFull(),
 
+                                    // Inscripcion a materias irregulares
+                                    Select::make('no_grupo_materias')
+                                        ->label('Inscripción a Materias Irregulares')
+                                        ->multiple()
+                                        ->live()
+                                        ->options(function (Get $get) {
+                                            
+                                            $gestionId = $get('gestion_id');
+                                            if (!$gestionId) {
+                                                return [];
+                                            }
+
+                                            $curso = Curso::where('gestion_id', $gestionId)->with('materia')->get();
+                                            if (!$curso) {
+                                                return [];
+                                            }
+
+                                            return $curso->mapWithKeys(function ($curso) {
+                                                $materiaNombre = $curso->materia ? $curso->materia->nombre : 'Sin materia';
+                                                return [$curso->id => $materiaNombre . " (Codigo: {$curso->seccion} Grupos: " . ($curso->grupos()->count()) . ")"];
+                                            });
+                                        })
+                                        ->disabled(fn (Get $get) => !$get('gestion_id'))
+                                        ->helperText(fn (Get $get) =>
+                                        $get('gestion_id')
+                                            ? 'Seleccione el curso irregular al que se inscribirá'
+                                            : 'Primero debe seleccionar una gestión'
+                                        ),
+                                    Placeholder::make('condiciones_info')
+                                        ->label('Extra Información')
+                                        ->content('Seleccionar un curso irregular implica aceptar las condiciones asociadas a dicho curso.')
+                                        ->columnSpanFull(),
+                                    // solo aplica si el curso correspondiente a un grupo.
                                     Repeater::make('condiciones')
                                         ->label('Condiciones')
                                         ->required()
@@ -533,12 +566,16 @@ class CrearInscripcionAvanzada extends Page implements HasForms
             $data = $this->form->getState();
 
             // Validar que no exista una inscripción duplicada
+
             $existente = Inscripcion::where('estudiante_id', $data['estudiante_id'])
                 ->where('grupo_id', $data['grupo_id'])
                 ->where('gestion_id', $data['gestion_id'])
                 ->first();
 
+            $cursos_irregulares = $data['no_grupo_materias'] ?? [];
+
             if ($existente) {
+
                 Notification::make()
                     ->title('Inscripción duplicada')
                     ->body('El estudiante ya está inscrito en este grupo para la gestión seleccionada.')
@@ -550,18 +587,46 @@ class CrearInscripcionAvanzada extends Page implements HasForms
 
             DB::beginTransaction();
 
-            // Crear la inscripción
-            $inscripcion = Inscripcion::create([
-                'codigo_inscripcion' => $data['codigo_inscripcion'],
-                'estudiante_id' => $data['estudiante_id'],
-                'grupo_id' => $data['grupo_id'],
-                'gestion_id' => $data['gestion_id'],
-                'fecha_inscripcion' => $data['fecha_inscripcion'],
-                'estado_id' => $data['estado_id'],
-                'condiciones' => $data['condiciones']
-            ]);
+            // Crear la inscripción apartir de un grupo.
+            $grupo = Grupo::find($data['grupo_id']);
+            foreach ($grupo->cursos as $cursoId) {
+                $inscripcion = Inscripcion::create([
+                    'codigo_inscripcion' => $data['codigo_inscripcion'],
+                    'fecha_inscripcion' => $data['fecha_inscripcion'],
+                    'estado_id' => $data['estado_id'],
+                    'estudiante_id' => $data['estudiante_id'],
+                    'grupo_id' => $data['grupo_id'],
+                    'gestion_id' => $data['gestion_id'],
+                    'curso_id' => $cursoId,
+                ]);
+            }
 
-            // Procesar documentos si existen
+            // Crear inscripciones para cursos irregulares si existen
+            if (!empty($cursos_irregulares)) {
+                foreach ($cursos_irregulares as $cursoIrregularId) {
+                    // Verificar si ya existe una inscripción para este curso irregular
+                    $existenteIrregular = Inscripcion::where('estudiante_id', $data['estudiante_id'])
+                        ->where('curso_id', $cursoIrregularId)
+                        ->where('gestion_id', $data['gestion_id'])
+                        ->first();
+                    if ($existenteIrregular) {
+                        continue; // Saltar si ya existe
+                    }
+                    $inscripcionIrregular = Inscripcion::create([
+                        'codigo_inscripcion' => $data['codigo_inscripcion'],
+                        'fecha_inscripcion' => $data['fecha_inscripcion'],
+                        'estado_id' => $data['estado_id'],
+                        'estudiante_id' => $data['estudiante_id'],
+                        'grupo_id' => null, // No pertenece a un grupo regular
+                        'gestion_id' => $data['gestion_id'],
+                        'curso_id' => $cursoIrregularId,
+                    ]);
+
+
+                }
+            }
+
+            // Procesar documentos para ambos tipos de inscripciones - revisar modelo y relaciones. 
             if (!empty($data['documentos'])) {
                 foreach ($data['documentos'] as $documento) {
                     $inscripcion->documentos()->create([
