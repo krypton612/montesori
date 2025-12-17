@@ -219,13 +219,12 @@ class CrearEstudianteAvanzada extends Page implements HasForms
             }
         }
 
-        // teléfonos estudiante: Bolivia móvil normalizado
+        // teléfonos estudiante: Bolivia móvil normalizado (OPCIONAL)
         $tel1 = $this->normalizeBoliviaMobile($data['telefono_principal'] ?? null);
         $data['telefono_principal'] = $tel1;
 
-        if (empty($tel1)) {
-            $errors['telefono_principal'] = 'Debe ingresar el teléfono principal.';
-        } elseif (!$this->isValidBoliviaMobile($tel1)) {
+        // si viene, valida; si no viene, NO error
+        if (!empty($tel1) && !$this->isValidBoliviaMobile($tel1)) {
             $errors['telefono_principal'] = 'Teléfono principal inválido: 8 dígitos y debe empezar con 6 o 7 (Bolivia).';
         }
 
@@ -885,7 +884,7 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                 'apellido_mat' => $data['apellido_mat'] ?? null,
                 'carnet_identidad' => $data['carnet_identidad'],
                 'fecha_nacimiento' => $data['fecha_nacimiento'],
-                'telefono_principal' => $data['telefono_principal'],
+                'telefono_principal' => $data['telefono_principal'] ?? null,
                 'telefono_secundario' => $data['telefono_secundario'] ?? null,
                 'email_personal' => $data['email_personal'],
                 'direccion' => $data['direccion'] ?? null,
