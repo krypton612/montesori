@@ -17,20 +17,23 @@ class MateriaForm
             ->components([
                 TextInput::make('nombre')
                     ->placeholder("Matemáticas Avanzadas")
-                    ->prefix("MAT-")
-                    ->unique(ignoreRecord: true)
+                    ->prefix('📚')
                     ->prefixIcon(Heroicon::OutlinedBookOpen)
-                    ->required(),
+                    ->required()
+                    ->live()
+                    ,
                 TextInput::make('nivel')
                     ->prefixIcon(Heroicon::OutlinedArrowDown)
                     ->numeric(),
                 TextInput::make('horas_semanales')
                     ->prefixIcon(Heroicon::OutlinedClock)
                     ->numeric(),
-                Textarea::make('descripcion')->minLength(100),
+                Textarea::make('descripcion')->minLength(10),
                 Select::make('grado')
+                    ->live()
                     ->options([
                         'PEDAGOGIA' => 'Pedagogía',
+                        'INICIAL' => 'Inicial',
                         'PRIMARIA' => 'Primaria',
                         'SECUNDARIA' => 'Secundaria',
                     ])

@@ -287,6 +287,7 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                                                         ->prefixIcon(Heroicon::Identification)
                                                         ->label('Carnet de Identidad')
                                                         ->required()
+                                                        ->unique(Persona::class, 'carnet_identidad')
                                                         ->maxLength(20)
                                                         ->placeholder('Ingrese el CI del apoderado'),
 

@@ -27,7 +27,6 @@ class CursosTable
                     ->searchable()
                     ->sortable()
                     ->badge()
-                    ->prefix("CURSO-")
                     ->color('primary')
                     ->icon('heroicon-o-identification')
                     ->weight('bold'),
@@ -39,8 +38,8 @@ class CursosTable
                     ->icon('heroicon-o-book-open')
                     ->color('info')
                     ->wrap()
-                    ->limit(30)
-                    ->tooltip(fn ($record) => $record->materia?->nombre),
+                    ->getStateUsing(fn ($record) => strtoupper($record->materia?->nombre . ' - Niv. ' . $record->materia?->grado))
+                    ->limit(30),
 
                 TextColumn::make('profesor.nombre_completo')
                     ->label('Profesor')

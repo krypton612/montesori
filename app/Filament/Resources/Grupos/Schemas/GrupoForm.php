@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Grupos\Schemas;
 
 use App\Models\Gestion;
+use App\Models\Grupo;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -13,6 +14,8 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
+
+use function Symfony\Component\Clock\now;
 
 class GrupoForm
 {
@@ -33,6 +36,8 @@ class GrupoForm
                                     ->maxLength(50)
                                     ->placeholder('Ej: GRUPO-2024-A')
                                     ->helperText('Código único identificador del grupo')
+                                    ->readOnly()
+                                    ->formatStateUsing(fn ($state) => 'GRUPO-' . now()->format('Y') . '-' . Grupo::max('id') + 1)
                                     ->prefixIcon('heroicon-o-hashtag')
                                     ->autocomplete(false),
 
