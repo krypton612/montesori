@@ -44,12 +44,12 @@ class EstudiantesRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                TextColumn::make('estudiante.codigo_saga')
+                TextColumn::make('codigo_saga')
                     ->label('Código SAGA')
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('estudiante.persona.nombre')
+                TextColumn::make('persona.nombre_completo')
                     ->label('Nombre')
                     ->sortable()
                     ->searchable(),

@@ -1,8 +1,12 @@
 <?php
 
 namespace App\Filament\Resources\Inscripcions\Tables;
+use Faker\Core\Color;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\ImageColumn;
@@ -77,6 +81,45 @@ class InscripcionsTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                ActionGroup::make([
+                    Action::make('Hoja de Inscripción')
+                        ->icon(Heroicon::OutlinedDocumentArrowDown)
+                        ->color('secondary')
+                        ->modalHeading('Vista Previa - Hoja de Inscripción')
+                        ->modalSubmitActionLabel('Descargar PDF')
+                        ->modalCancelActionLabel('Cerrar')
+                        ->modalWidth('5xl')
+                        ->modalContent(fn ($record) => view('modals.preview-document', [
+                            'url' => route('documentos.inscripcion_hoja_datos.preview', $record->id),
+                            'downloadUrl' => route('documentos.inscripcion_hoja_datos.descargar', $record->id)
+                        ]))
+                        ->action(function ($record) {
+                            return redirect()->route('documentos.inscripcion_hoja_datos.descargar', $record->id);
+                        }),
+                    Action::make('Hoja de Servicios')
+                        ->icon(Heroicon::OutlinedDocumentArrowDown)
+                        ->color('secondary')
+                        ->modalHeading('Vista Previa - Hoja de Compromiso')
+                        ->modalSubmitActionLabel('Descargar PDF')
+                        ->modalCancelActionLabel('Cerrar')
+                        ->modalWidth('5xl')
+                        ->modalContent(fn ($record) => view('modals.preview-document', [
+                            'url' => route('documentos.preview.compromiso', $record->id),
+                            'downloadUrl' => route('documentos.descargar.compromiso', $record->id)
+                        ]))
+                        ->action(function ($record) {
+                            return redirect()->route('documentos.descargar.compromiso', $record->id);
+                        }),
+                    Action::make('Enviar Hojas por Email')
+                        ->icon('heroicon-o-envelope')
+                        ->color('secondary')
+                        ->openUrlInNewTab()
+                ])
+                    ->label('Documentos')
+                    ->outlined()
+                    ->icon(Heroicon::DocumentArrowDown)
+                    ->button()
+
             ])
 
             ->toolbarActions([

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -62,5 +63,41 @@ class Persona extends Model
     {
         return "{$this->nombre} {$this->apellido_pat} {$this->apellido_mat}";
     }
+
+    // Persona.php
+    public function getEdadAttribute(): ?int
+    {
+        if (!$this->fecha_nacimiento) {
+            return -1;
+        }
+
+        return Carbon::parse($this->fecha_nacimiento)->age;
+    }
+
+    public function calcularEdad(): ?int
+    {
+        if (!$this->fecha_nacimiento) {
+            return -1;
+        }
+
+        return Carbon::parse($this->fecha_nacimiento)->age;
+    }
+
+
+    protected static function booted(): void
+    {
+        static::creating(function (Persona $persona) {
+            if ($persona->fecha_nacimiento) {
+                $persona->edad = Carbon::parse($persona->fecha_nacimiento)->age;
+            }
+        });
+
+        static::updating(function (Persona $persona) {
+            if ($persona->isDirty('fecha_nacimiento')) {
+                $persona->edad = Carbon::parse($persona->fecha_nacimiento)->age;
+            }
+        });
+    }
+
 }
 

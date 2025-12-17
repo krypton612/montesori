@@ -75,7 +75,7 @@ class EstudianteInfolist
                         Grid::make(3)
                             ->columnSpanFull()
                             ->schema([
-                                TextEntry::make('persona.email')
+                                TextEntry::make('persona.email_personal')
                                     ->label('Correo Electrónico')
                                     ->icon('heroicon-o-envelope')
                                     ->iconColor('blue')
