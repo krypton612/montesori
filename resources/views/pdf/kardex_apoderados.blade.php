@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Kardex + Apoderados (Detallado)</title>
+    <title>KARDEX DEL ESTUDIANTE Y APODERADOS</title>
     <style>
         /* Reservamos bastante espacio abajo para que las firmas queden más abajo (sin chocar con contenido) */
         @page { margin: 1.2cm 1.2cm 5.8cm 1.2cm; }  /* más margen abajo */
@@ -171,7 +171,7 @@
             @endif
         </td>
         <td class="title">
-            <h1>KARDEX + APODERADOS (DETALLADO)</h1>
+            <h1>KARDEX DEL ESTUDIANTE Y APODERADOS</h1>
             <h2>Registro de apoderados, relación y datos de contacto</h2>
         </td>
         <td class="qr">
