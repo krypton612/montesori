@@ -5,7 +5,9 @@
     <title>Kardex + Apoderados (Detallado)</title>
     <style>
         /* Reservamos bastante espacio abajo para que las firmas queden más abajo (sin chocar con contenido) */
-        @page { margin: 1.2cm 1.2cm 4.2cm 1.2cm; }
+        @page { margin: 1.2cm 1.2cm 5.8cm 1.2cm; }  /* más margen abajo */
+        .sign-table td { padding-top: 55px; }       /* más espacio para firmar */
+        .footer-signatures { bottom: 0.5cm; }       /* más abajo */
 
         body {
             font-family: Arial, sans-serif;

@@ -304,7 +304,7 @@ class DocumentsController extends Controller
     {
         $datos = $this->getKardexApoderadosData($id);
 
-        $pdf = Pdf::loadView('pdf.kardex_apoderados_detallado', $datos)
+        $pdf = Pdf::loadView('pdf.kardex_apoderados', $datos)
             ->setPaper('letter', 'landscape') // si quieres portrait: ->setPaper('letter', 'portrait')
             ->setOptions([
                 'isHtml5ParserEnabled' => true,
@@ -320,7 +320,7 @@ class DocumentsController extends Controller
     {
         $datos = $this->getKardexApoderadosData($id);
 
-        $pdf = Pdf::loadView('pdf.kardex_apoderados_detallado', $datos)
+        $pdf = Pdf::loadView('pdf.kardex_apoderados', $datos)
             ->setPaper('letter', 'landscape')
             ->setOptions([
                 'isHtml5ParserEnabled' => true,
@@ -343,7 +343,7 @@ class DocumentsController extends Controller
             ->values();
 
         $apoderadoPrincipal = $apoderados->first(fn ($a) => (bool) ($a->pivot->es_principal ?? false));
-        $apoderadoPrincipalNombre = $apoderadoPrincipal?->persona?->getNombreCompletoAttribute ?? null;
+        $apoderadoPrincipalNombre = $apoderadoPrincipal?->persona?->getNombreCompletoAttribute();
 
         // Logo base64 (usa tu helper ya existente)
         $logoBase64 = $this->imageToBase64('images/logo.png')
@@ -378,7 +378,7 @@ class DocumentsController extends Controller
             'estudiante_dir' => $persona?->direccion ?? '—',
 
             'apoderados' => $apoderados,
-            'apoderado_principal_nombre' => $apoderadoPrincipal?->persona?->nombre_completo ?? null,
+           'apoderado_principal_nombre' => $apoderadoPrincipal?->persona?->nombre_completo ?? null,
 
             'qr_value' => $qrValue,
             'logo_path' => $logoBase64,
