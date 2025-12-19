@@ -295,4 +295,97 @@ class DocumentsController extends Controller
 
         return $pdf->stream('hoja-inscripcion-' . $datos['codigo_inscripcion'] . '.pdf');
     }
+    
+    // =======================
+    //  KARDEX + APODERADOS
+    // =======================
+
+    public function descargarKardexApoderados(int $id)
+    {
+        $datos = $this->getKardexApoderadosData($id);
+
+        $pdf = Pdf::loadView('pdf.kardex_apoderados', $datos)
+            ->setPaper('letter', 'landscape') // si quieres portrait: ->setPaper('letter', 'portrait')
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
+
+        $codigo = $datos['codigo_saga'] ?? ('EST-' . $id);
+
+        return $pdf->download('KARDEX-APODERADOS-' . $codigo . '.pdf');
+    }
+
+    public function previewKardexApoderados(int $id)
+    {
+        $datos = $this->getKardexApoderadosData($id);
+
+        $pdf = Pdf::loadView('pdf.kardex_apoderados', $datos)
+            ->setPaper('letter', 'landscape')
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
+
+        $codigo = $datos['codigo_saga'] ?? ('EST-' . $id);
+
+        return $pdf->stream('KARDEX-APODERADOS-' . $codigo . '.pdf');
+    }
+
+    protected function getKardexApoderadosData(int $estudianteId): array
+    {
+        $estudiante = Estudiante::with(['persona', 'apoderados.persona'])->findOrFail($estudianteId);
+        $persona = $estudiante->persona;
+
+        // Orden: principal primero
+        $apoderados = $estudiante->apoderados
+            ->sortByDesc(fn ($a) => (int) ($a->pivot->es_principal ?? 0))
+            ->values();
+
+        $apoderadoPrincipal = $apoderados->first(fn ($a) => (bool) ($a->pivot->es_principal ?? false));
+        $apoderadoPrincipalNombre = $apoderadoPrincipal?->persona?->getNombreCompletoAttribute();
+
+        // Logo base64 (usa tu helper ya existente)
+        $logoBase64 = $this->imageToBase64('images/logo.png')
+            ?? $this->imageToBase64('assets/logo.png');
+
+        // Foto estudiante (si existe)
+        $fotoBase64 = null;
+        if (!empty($estudiante->foto_url)) {
+            try {
+                $relativePath = $estudiante->foto_url;
+                $bin = Storage::disk('public')->get($relativePath);
+                $fotoBase64 = 'data:image/png;base64,' . base64_encode($bin);
+            } catch (\Throwable $e) {
+                $fotoBase64 = null;
+            }
+        }
+
+        $qrValue = $estudiante->codigo_saga
+            ?? ($persona?->carnet_identidad ?? ('EST-' . $estudianteId));
+
+        return [
+            'institucion' => 'Instituto Psicopedagógico EMANUEL MONTESSORI',
+
+            'estudiante_id' => $estudianteId,
+            'estudiante_nombre' => $persona?->nombre_completo ?? '—',
+            'estudiante_ci' => $persona?->carnet_identidad ?? '—',
+            'codigo_saga' => $estudiante->codigo_saga ?? '—',
+            'estudiante_edad' => $persona?->calcularEdad() ?? '—',
+            'estudiante_fn' => $persona?->fecha_nacimiento ? $persona->fecha_nacimiento->format('d/m/Y') : '—',
+            'estudiante_tel' => $persona?->telefono_principal ?? '—',
+            'estudiante_email' => $persona?->email_personal ?? '—',
+            'estudiante_dir' => $persona?->direccion ?? '—',
+
+            'apoderados' => $apoderados,
+           'apoderado_principal_nombre' => $apoderadoPrincipal?->persona?->nombre_completo ?? null,
+
+            'qr_value' => $qrValue,
+            'logo_path' => $logoBase64,
+            'foto_url' => $fotoBase64,
+
+            'fecha_impresion' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+    }
+
 }

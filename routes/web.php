@@ -20,3 +20,9 @@ Route::get('/documentos/descargar/compromiso/{id}', [DocumentsController::class,
 
 Route::get('/documentos/preview/compromiso/{id}', [DocumentsController::class, 'previewCompromisoEstudiantesNuevos'])
     ->name('documentos.preview.compromiso');
+
+Route::get('kardex-apoderados/{id}/download', [DocumentsController::class, 'descargarKardexApoderados'])
+    ->name('documents.kardex_apoderados.download');
+
+Route::get('kardex-apoderados/{id}/preview', [DocumentsController::class, 'previewKardexApoderados'])
+    ->name('documents.kardex_apoderados.preview');
