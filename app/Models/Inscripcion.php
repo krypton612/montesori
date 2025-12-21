@@ -19,6 +19,7 @@ class Inscripcion extends Model
         'fecha_inscripcion',
         'estado_id',
         'condiciones',
+        'curso_id'
     ];
 
     protected $casts = [
@@ -46,8 +47,14 @@ class Inscripcion extends Model
         return $this->belongsTo(Estado::class, 'estado_id');
     }
 
+
+    public function curso()
+    {
+        return $this->belongsTo(Curso::class);
+    }
+
     public function documentos()
     {
-        return $this->hasMany(DocumentoInscripcion::class, 'inscripcion_id');
+        return $this->hasMany(DocumentoInscripcion::class, 'codigo_inscripcion', 'codigo_inscripcion');
     }
 }

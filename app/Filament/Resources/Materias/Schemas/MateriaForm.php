@@ -36,6 +36,7 @@ class MateriaForm
                         'INICIAL' => 'Inicial',
                         'PRIMARIA' => 'Primaria',
                         'SECUNDARIA' => 'Secundaria',
+                        'CURSO_INDIVIDUAL' => 'Curso Individual',
                     ])
                     ->required(),
                 Toggle::make('habilitado')

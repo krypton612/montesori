@@ -219,6 +219,7 @@ class InscripcionForm
                             ->hidden(fn (Get $get) => !filled($get('grupo_id')))
                             ->columnSpanFull(),
 
+                        // nuevas reglas de negocio. problemas criticos. - revisar en casa.
                         Repeater::make('condiciones')
                             ->label('Condiciones del Grupo')
                             ->required()
@@ -310,7 +311,6 @@ class InscripcionForm
                                 : null
                             )
                             ->required()
-                            ->unique(Inscripcion::class, 'codigo_inscripcion', ignoreRecord: true)
                             ->maxLength(50)
                             ->helperText('Código único para identificar esta inscripción')
                             ->readOnly(fn (string $context) => $context === 'edit')

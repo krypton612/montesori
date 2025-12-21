@@ -15,16 +15,24 @@ class DocumentoInscripcion extends Model
         'inscripcion_id',
         'tipo_documento_id',
         'nombre_archivo',
+        'codigo_inscripcion',
     ];
 
 
+    /*
     public function inscripcion()
     {
         return $this->belongsTo(Inscripcion::class, 'inscripcion_id');
     }
+    */
 
     public function tipo_documento()
     {
         return $this->belongsTo(TipoDocumento::class, 'tipo_documento_id');
+    }
+
+    public function estudiante()
+    {
+        return $this->belongsTo(Estudiante::class, 'estudiante_id');
     }
 }

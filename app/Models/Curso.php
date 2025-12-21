@@ -83,4 +83,16 @@ class Curso extends Model
     {
         return $this->belongsToMany(Grupo::class, 'curso_grupo', 'curso_id', 'grupo_id');
     }
+
+    public function inscripciones()
+    {
+        return $this->hasMany(Inscripcion::class);
+    }
+
+
+    public function getNombreCompletoAttribute()
+    {
+        return "{$this->seccion} - {$this->materia->nombre}";
+    }
+
 }

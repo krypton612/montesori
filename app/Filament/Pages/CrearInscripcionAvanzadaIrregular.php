@@ -3,54 +3,42 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Components\QrCode;
-use App\Filament\Fields\QrCodeView;
 use App\Models\Curso;
+use App\Models\Estado;
 use App\Models\Estudiante;
 use App\Models\Gestion;
 use App\Models\Grupo;
 use App\Models\Inscripcion;
-use App\Models\Estado;
-use App\Models\TipoDocumento;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Form;
+use Filament\Schemas\Components\Text;
+
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
-use Filament\Support\Exceptions\Halt;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\DB;
 
-class CrearInscripcionAvanzada extends Page implements HasForms
+class CrearInscripcionAvanzadaIrregular extends Page implements HasForms
 {
-    use InteractsWithForms;
-
-    protected string $view = 'filament.pages.crear-inscripcion-avanzada';
+    protected string $view = 'filament.pages.crear-inscripcion-avanzada-irregular';
 
     protected static string|null|\UnitEnum $navigationGroup = 'Inscripcion Estudiantil';
 
-    protected static ?string $navigationLabel = 'Inscripción Regular';
+    protected static ?string $navigationLabel = 'Inscripción Irregular';
 
-    protected static ?string $title = 'Formulario de Inscripción Regular';
-
+    protected static ?string $title = 'Formulario de Inscripción Irregular';
 
     public ?array $data = [];
 
@@ -105,24 +93,21 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->helperText('Busque por nombre o código SAGA')
                                         ->columnSpanFull(),
 
-
-                                        Section::make('Detalles del Estudiante')
-                                            ->icon(Heroicon::OutlinedUser)
-                                            ->columnSpanFull()
-                                            ->compact()
-                                            ->columns(2)
-                                            ->schema([
+                                    Section::make('Detalles del Estudiante')
+                                        ->icon(Heroicon::OutlinedUser)
+                                        ->columnSpanFull()
+                                        ->compact()
+                                        ->columns(2)
+                                        ->schema([
                                             TextInput::make('estudiante_nombre')
                                                 ->label('Nombre Completo')
                                                 ->default('N/A o requiere recargo')
-                                                ->disabled()
-                                                ,
+                                                ->disabled(),
 
                                             TextInput::make('estudiante_ci')
                                                 ->label('Cédula de Identidad')
                                                 ->default('N/A o requiere recargo')
-                                                ->disabled()
-                                                ,
+                                                ->disabled(),
 
                                             TextInput::make('estudiante_codigo')
                                                 ->label('Código SAGA')
@@ -134,18 +119,16 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ->default('N/A o requiere recargo')
                                                 ->disabled()
                                         ])
-
-
                                 ])
                                 ->columns(2),
                         ]),
 
-                    Wizard\Step::make('Gestión y Grupo')
-                        ->description('Seleccione la gestión y el grupo')
+                    Wizard\Step::make('Gestión y Cursos')
+                        ->description('Seleccione la gestión y el curso')
                         ->icon('heroicon-o-calendar')
                         ->schema([
                             Section::make('Gestión Académica')
-                                ->description('Configure la gestión y el grupo para la inscripción')
+                                ->description('Configure la gestión y los cursos para la inscripción')
                                 ->schema([
                                     Select::make('gestion_id')
                                         ->label('Gestión')
@@ -160,77 +143,115 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->searchable()
                                         ->required()
                                         ->live()
-                                        ->afterStateUpdated(fn (callable $set) => $set('grupo_id', null))
+                                        ->afterStateUpdated(function (callable $set) {
+                                            $set('cursos', null);
+                                            $set('condiciones', []);
+                                        })
                                         ->helperText('Seleccione la gestión académica vigente'),
 
-                                    Select::make('grupo_id')
-                                        ->label('Grupo')
+                                    Select::make('cursos')
+                                        ->label('Cursos')
                                         ->options(function (Get $get) {
                                             $gestionId = $get('gestion_id');
                                             if (!$gestionId) {
                                                 return [];
                                             }
-                                            return Grupo::where('gestion_id', $gestionId)
-                                                ->where('activo', true)
+                                            return Curso::with(['materia', 'turno', 'grupos'])
+                                                ->where('gestion_id', $gestionId)
+                                                ->where('habilitado', true)
                                                 ->get()
-                                                ->mapWithKeys(fn ($grupo) => [
-                                                    $grupo->id => "{$grupo->codigo} - {$grupo->nombre}"
+                                                ->mapWithKeys(fn ($curso) => [
+                                                    $curso->id => "{$curso->materia->nombre} - {$curso->seccion} [{$curso->turno->nombre}] (" .
+                                                                ($curso->grupos->isNotEmpty() 
+                                                                    ? $curso->grupos->pluck('nombre')->implode(', ') 
+                                                                    : 'IRREGULAR') 
+                                                                . ")"
                                                 ]);
                                         })
+                                        ->multiple()
                                         ->searchable()
                                         ->live()
                                         ->afterStateUpdated(function (callable $set, $state) {
-                                            if ($state) {
-                                                $grupo = \App\Models\Grupo::find($state);
-                                                if ($grupo && !empty($grupo->condiciones)) {
-                                                    $condicionesGrupo = is_string($grupo->condiciones)
-                                                        ? json_decode($grupo->condiciones, true)
-                                                        : $grupo->condiciones;
+                                            if (!$state || empty($state)) {
+                                                $set('condiciones', []);
+                                                return;
+                                            }
 
-                                                    if (is_array($condicionesGrupo)) {
-                                                        $condicionesConCumple = array_map(function ($condicion) {
-                                                            return array_merge($condicion, ['cumple' => false]);
-                                                        }, $condicionesGrupo);
-
-                                                        $set('condiciones', $condicionesConCumple);
+                                            // $state es un array de IDs cuando es multiple
+                                            $cursos = Curso::with('grupos')->find($state);
+                                            
+                                            // Colección para almacenar todas las condiciones únicas
+                                            $todasLasCondiciones = collect();
+                                            
+                                            // Iterar sobre cada curso en la colección
+                                            foreach ($cursos as $curso) {
+                                                if ($curso->grupos && $curso->grupos->isNotEmpty()) {
+                                                    foreach ($curso->grupos as $grupo) {
+                                                        // Decodificar las condiciones del grupo si están en JSON
+                                                        $condicionesGrupo = is_string($grupo->condiciones)
+                                                            ? json_decode($grupo->condiciones, true)
+                                                            : $grupo->condiciones;
+                                                        
+                                                        if (is_array($condicionesGrupo) && !empty($condicionesGrupo)) {
+                                                            foreach ($condicionesGrupo as $condicion) {
+                                                                // Crear una clave única para evitar duplicados
+                                                                $claveUnica = md5(json_encode([
+                                                                    'tipo' => $condicion['tipo'] ?? '',
+                                                                    'valor' => $condicion['valor'] ?? '',
+                                                                    'operador' => $condicion['operador'] ?? '',
+                                                                ]));
+                                                                
+                                                                // Solo agregar si no existe ya
+                                                                if (!$todasLasCondiciones->has($claveUnica)) {
+                                                                    $todasLasCondiciones->put($claveUnica, array_merge($condicion, ['cumple' => false]));
+                                                                }
+                                                            }
+                                                        }
                                                     }
-                                                } else {
-                                                    $set('condiciones', []);
                                                 }
                                             }
+                                            
+                                            // Establecer las condiciones únicas
+                                            $set('condiciones', $todasLasCondiciones->values()->toArray());
                                         })
                                         ->disabled(fn (Get $get) => !$get('gestion_id'))
                                         ->helperText(fn (Get $get) =>
-                                        $get('gestion_id')
-                                            ? 'Seleccione el grupo al que se inscribirá'
-                                            : 'Primero debe seleccionar una gestión'
+                                            $get('gestion_id')
+                                                ? 'Seleccione los cursos para la inscripción irregular'
+                                                : 'Primero debe seleccionar una gestión'
                                         ),
 
-                                    Placeholder::make('grupo_info')
-                                        ->label('Información del Grupo')
+                                    Placeholder::make('cursos_info')
+                                        ->label('Información de los Cursos')
                                         ->content(function (Get $get) {
-                                            $grupoId = $get('grupo_id');
-                                            if (!$grupoId) return 'Seleccione un grupo para ver más información';
+                                            $cursosIds = $get('cursos');
+                                            if (!$cursosIds || empty($cursosIds)) {
+                                                return 'Seleccione cursos para ver más información';
+                                            }
 
-                                            $grupo = Grupo::with('cursos')->find($grupoId);
-                                            if (!$grupo) return 'No se encontró información';
+                                            $cursos = Curso::with(['materia', 'turno', 'grupos'])->find($cursosIds);
+                                            if ($cursos->isEmpty()) {
+                                                return 'No se encontró información';
+                                            }
 
-                                            $info = "📋 {$grupo->descripcion}\n\n";
-
-                                            if ($grupo->cursos && $grupo->cursos->count() > 0) {
-                                                $info .= "📚 Materias asignados: " . $grupo->cursos->count();
+                                            $info = "📚 Total de cursos seleccionados: " . $cursos->count() . "\n\n";
+                                            
+                                            foreach ($cursos as $curso) {
+                                                $info .= "• {$curso->materia->nombre} ({$curso->seccion}) - {$curso->turno->nombre}\n";
+                                                if ($curso->grupos && $curso->grupos->isNotEmpty()) {
+                                                    $info .= "  Grupos: " . $curso->grupos->pluck('nombre')->implode(', ') . "\n";
+                                                }
                                             }
 
                                             return $info;
                                         })
-                                        ->hidden(fn (Get $get) => !filled($get('grupo_id')))
+                                        ->hidden(fn (Get $get) => !filled($get('cursos')))
                                         ->columnSpanFull(),
 
-                                   
                                     Repeater::make('condiciones')
-                                        ->label('Condiciones')
+                                        ->label('Condiciones de los Grupos')
                                         ->required()
-                                        ->hidden(fn (Get $get) => !filled($get('grupo_id')))
+                                        ->hidden(fn (Get $get) => !filled($get('cursos')))
                                         ->schema([
                                             Select::make('tipo')
                                                 ->label('Tipo de Condición')
@@ -273,7 +294,6 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                         ])
                                                         ->default('ninguno')
                                                         ->native(false),
-
                                                 ]),
 
                                             Textarea::make('descripcion')
@@ -298,43 +318,16 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ])
                                         ->columns(2)
                                         ->defaultItems(0)
-                                        ->reorderable()
+                                        ->reorderable(false)
                                         ->addable(false)
                                         ->deletable(false)
                                         ->columnSpanFull(),
                                 ])
                                 ->columns(2),
-                        ]),
+                                            ]),
                     Wizard\Step::make('Detalles de Inscripción')
-                        ->description('Complete los datos de la inscripción')
-                        ->icon('heroicon-o-document-text')
-                        ->beforeValidation(function (Get $get) {
-                            $estudianteId = $get('estudiante_id');
-                            $grupoId = $get('grupo_id');
-
-
-                            if (!$estudianteId || !$grupoId) {
-                                return;
-                            }
-
-                            $grupo = Grupo::find($grupoId);
-
-                            $existente = Inscripcion::where('estudiante_id', $estudianteId)
-                                ->where('grupo_id', $grupoId)
-                                ->where('gestion_id', $grupo->gestion_id)
-                                ->first();
-
-                            if ($existente) {
-                                Notification::make()
-                                    ->title('Inscripción duplicada')
-                                    ->body('El estudiante ya está inscrito en este grupo para la gestión seleccionada.')
-                                    ->danger()
-                                    ->persistent()
-                                    ->send();
-
-                                throw new \Filament\Support\Exceptions\Halt();
-                            }
-                        })
+                        ->description('Seleccione la gestión y el curso')
+                        ->icon('heroicon-o-calendar')
                         ->schema([
                             Section::make('Información de Inscripción')
                                 ->description('Datos administrativos de la inscripción')
@@ -428,16 +421,17 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ->label('Lista de materias y profesores')
                                                 ->keyLabel("Materia")
                                                 ->valueLabel("Profesor")
-                                                ->hidden(fn (Get $get) => !filled($get('grupo_id')))
+                                                ->hidden(fn (Get $get) => !filled($get('cursos')))
                                                 ->state(function (Get $get) {
-                                                    $grupoId = $get('grupo_id');
-                                                    if (!$grupoId) return [];
+                                                    $cursosList = $get('cursos');
+                                                    if (!$cursosList) return [];
 
-                                                    $grupo = Grupo::with(['cursos.materia', 'cursos.profesor.persona'])->find($grupoId);
-                                                    if (!$grupo || !$grupo->cursos) return [];
+                                                    $cursos = Curso::with(['materia', 'profesor.persona'])->find($cursosList);
+                                                    
+                                                    if (!$cursos) return [];
 
                                                     $materias = [];
-                                                    foreach ($grupo->cursos as $curso) {
+                                                    foreach ($cursos as $curso) {
                                                         $nombreMateria = $curso->materia->nombre ?? 'Sin materia';
                                                         $nombreProfesor = $curso->profesor
                                                             ? "{$curso->profesor->persona->nombre} {$curso->profesor->persona->apellido_pat} {$curso->profesor->persona->apellido_mat}"
@@ -469,175 +463,57 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ])
                                 ])
                                 ->columns(3),
-                        ]),
-
-                    Wizard\Step::make('Documentos')
-                        ->description('Adjunte los documentos requeridos')
-                        ->icon('heroicon-o-paper-clip')
-                        ->schema([
-                            Section::make('Documentos de Inscripción')
-                                ->description('Adjunte todos los documentos necesarios para la inscripción (opcional)')
-                                ->schema([
-                                    Repeater::make('documentos')
-                                        ->label('Documentos')
-                                        ->schema([
-                                            Select::make('tipo_documento_id')
-                                                ->label('Tipo de Documento')
-                                                ->options(fn () => TipoDocumento::where('tipo', 'inscripcion')->pluck('nombre', 'id'))
-                                                ->required()
-                                                ->searchable()
-                                                ->live()
-                                                ->columnSpan(1),
-
-                                            FileUpload::make('nombre_archivo')
-                                                ->label('Archivo')
-                                                ->directory('inscripciones/documentos')
-                                                ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
-                                                ->maxSize(5120)
-                                                ->required()
-                                                ->downloadable()
-                                                ->previewable()
-                                                ->columnSpan(1),
-                                        ])
-                                        ->columns(2)
-                                        ->addActionLabel('Agregar documento')
-                                        ->reorderableWithButtons()
-                                        ->collapsible()
-                                        ->itemLabel(fn (array $state): ?string =>
-                                            TipoDocumento::find($state['tipo_documento_id'] ?? null)?->nombre ?? 'Nuevo documento'
-                                        )
-                                        ->defaultItems(0)
-                                        ->columnSpanFull()
-                                        ->deleteAction(
-                                            fn (Action $action) => $action
-                                                ->requiresConfirmation()
-                                        ),
-                                ])
-                                ->icon('heroicon-o-document-duplicate'),
-                        ]),
+                        ])
+                        
                 ])
-                    ->columnSpanFull()
-                    ->submitAction(view('filament.pages.components.submit-button'))
-                    ->persistStepInQueryString()
-                    ->skippable(false)
-                    ,
-
-            ])
-            ->statePath('data');
+                ->columnSpanFull()
+                ->submitAction(view('filament.pages.components.submit-button'))
+                ->persistStepInQueryString()
+                ->skippable(true),
+            ])->statePath('data');
     }
 
     public function create(): void
     {
-        try {
-            $data = $this->form->getState();
+        $data = $this->form->getState();
+        
+        // Validar que todas las condiciones obligatorias se cumplan
+        /*
+        $condiciones = $data['condiciones'] ?? [];
+        $condicionesIncumplidas = collect($condiciones)->filter(function ($condicion) {
+            return ($condicion['obligatorio'] ?? false) && !($condicion['cumple'] ?? false);
+        });
 
-            // Validar que no exista una inscripción duplicada
-
-            $existente = Inscripcion::where('estudiante_id', $data['estudiante_id'])
-                ->where('grupo_id', $data['grupo_id'])
-                ->where('gestion_id', $data['gestion_id'])
-                ->first();
-
-            if ($existente) {
-
-                Notification::make()
-                    ->title('Inscripción duplicada')
-                    ->body('El estudiante ya está inscrito en este grupo para la gestión seleccionada.')
-                    ->danger()
-                    ->send();
-
-                throw new Halt();
-            }
-
-            DB::beginTransaction();
-
-            // Crear la inscripción apartir de un grupo.
-            $grupo = Grupo::find($data['grupo_id']);
-
-            foreach ($grupo->cursos as $curso) {
-
-                $inscripcion = Inscripcion::create([
-                    'codigo_inscripcion' => $data['codigo_inscripcion'],
-                    'fecha_inscripcion' => $data['fecha_inscripcion'],
-                    'estado_id' => $data['estado_id'],
-                    'estudiante_id' => $data['estudiante_id'],
-                    'grupo_id' => $data['grupo_id'],
-                    'gestion_id' => $data['gestion_id'],
-                    'curso_id' => $curso->id,
-                ]);
-            }
-
-            // Crear inscripciones para cursos irregulares si existen
-            /*
-            if (!empty($cursos_irregulares)) {
-                foreach ($cursos_irregulares as $cursoIrregularId) {
-                    // Verificar si ya existe una inscripción para este curso irregular
-                    $existenteIrregular = Inscripcion::where('estudiante_id', $data['estudiante_id'])
-                        ->where('curso_id', $cursoIrregularId)
-                        ->where('gestion_id', $data['gestion_id'])
-                        ->first();
-                    if ($existenteIrregular) {
-                        continue; // Saltar si ya existe
-                    }
-                    $inscripcionIrregular = Inscripcion::create([
-                        'codigo_inscripcion' => $data['codigo_inscripcion'],
-                        'fecha_inscripcion' => $data['fecha_inscripcion'],
-                        'estado_id' => $data['estado_id'],
-                        'estudiante_id' => $data['estudiante_id'],
-                        'grupo_id' => null, // No pertenece a un grupo regular
-                        'gestion_id' => $data['gestion_id'],
-                        'curso_id' => $cursoIrregularId,
-                    ]);
-
-
-                }
-            }
-            */
-
-            // Procesar documentos para ambos tipos de inscripciones - revisar modelo y relaciones. 
-
-            
-            if (!empty($data['documentos'])) {
-                foreach ($data['documentos'] as $documento) {
-                    $inscripcion->documentos()->create([
-                        'tipo_documento_id' => $documento['tipo_documento_id'],
-                        'nombre_archivo' => $documento['nombre_archivo'],
-                        'codigo_inscripcion' => $data['codigo_inscripcion'],
-                        'estudiante_id' => $data['estudiante_id'],
-                    ]);
-                }
-            }
-            
-
-            DB::commit();
-
-            Notification::make()
-                ->title('¡Inscripción creada exitosamente!')
-                ->body("La inscripción {$data['codigo_inscripcion']} ha sido registrada correctamente.")
-                ->success()
-                ->seconds(5)
-                ->send();
-
-            // Redirigir a la lista de inscripciones
-            $this->redirect(route('filament.informatica.resources.inscripcions.index'));
-
-        } catch (Halt $exception) {
-            return;
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            Notification::make()
-                ->title('Error al crear la inscripción')
-                ->body($e->getMessage())
+        if ($condicionesIncumplidas->isNotEmpty()) {
+            \Filament\Notifications\Notification::make()
+                ->title('Condiciones no cumplidas')
+                ->body('El estudiante no cumple con todas las condiciones obligatorias.')
                 ->danger()
-                ->persistent()
                 ->send();
+            return;
         }
+        */
+
+        // Aquí va tu lógica para crear las inscripciones
+        foreach ($data['cursos'] as $cursoId) {
+            Inscripcion::create([
+                'estudiante_id' => $data['estudiante_id'],
+                'curso_id' => $cursoId,
+                'gestion_id' => $data['gestion_id'],
+                'tipo' => 'irregular',
+                // ... otros campos
+            ]);
+        }
+
+        \Filament\Notifications\Notification::make()
+            ->title('Inscripción creada exitosamente')
+            ->success()
+            ->send();
     }
 
     public function getSubheading(): ?string
     {
-        return 'Complete el formulario para inscribir a un estudiante en un grupo específico para la gestión académica seleccionada.';
+        return 'Complete el formulario para inscribir a un estudiante de manera irregular a uno o más cursos.';
     }
 
     protected function getHeaderActions(): array
@@ -649,10 +525,5 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                 ->color('gray')
                 ->url(route('filament.informatica.resources.inscripcions.index')),
         ];
-    }
-
-    public function getFooter(): ?View
-    {
-        return view('filament.pages.footer-inscripcion-avanzada');
     }
 }
