@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Filament\Resources\Materias\Tables;
+
+use Faker\Provider\Text;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class MateriasTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('grado')
+                    ->icon(Heroicon::OutlinedAcademicCap)
+                    ->badge()
+                    ->searchable(),
+                TextColumn::make('nombre')
+                    ->icon(Heroicon::OutlinedBookOpen)
+                    ->badge()
+                    ->searchable(),
+                TextColumn::make('nivel')
+                    ->icon(Heroicon::AdjustmentsVertical)
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('horas_semanales')
+                    ->numeric()
+                    ->icon(Heroicon::OutlinedClock)
+                    ->alignCenter()
+                    ->sortable(),
+                TextColumn::make('descripcion')
+                    ->searchable(),
+                IconColumn::make('habilitado')
+                    ->boolean(),
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                //
+            ])
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}
