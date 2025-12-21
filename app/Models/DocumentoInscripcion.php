@@ -12,10 +12,10 @@ class DocumentoInscripcion extends Model
     protected $table = 'documento_inscripcion';
 
     protected $fillable = [
-        'inscripcion_id',
         'tipo_documento_id',
         'nombre_archivo',
         'codigo_inscripcion',
+        'estudiante_id',
     ];
 
 

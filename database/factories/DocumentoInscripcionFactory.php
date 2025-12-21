@@ -19,9 +19,10 @@ class DocumentoInscripcionFactory extends Factory
     public function definition(): array
     {
         return [
-            'inscripcion_id' => \App\Models\Inscripcion::factory(),
+            'estudiante_id' => \App\Models\Estudiante::factory(),
             'tipo_documento_id' => \App\Models\TipoDocumento::factory(),
             'nombre_archivo' => $this->faker->word() . '.pdf',
+            'codigo_inscripcion' => $this->faker->bothify('INS-####'),
         ];
     }
 }
