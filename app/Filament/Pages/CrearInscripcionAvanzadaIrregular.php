@@ -17,27 +17,28 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Infolists\Components\KeyValueEntry;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Text;
-
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
+use Filament\Support\Exceptions\Halt;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CrearInscripcionAvanzadaIrregular extends Page implements HasForms
 {
+
+    use InteractsWithForms;
+
     protected string $view = 'filament.pages.crear-inscripcion-avanzada-irregular';
-
     protected static string|null|\UnitEnum $navigationGroup = 'Inscripcion Estudiantil';
-
     protected static ?string $navigationLabel = 'Inscripción Irregular';
-
     protected static ?string $title = 'Formulario de Inscripción Irregular';
 
     public ?array $data = [];
@@ -52,478 +53,692 @@ class CrearInscripcionAvanzadaIrregular extends Page implements HasForms
         return $form
             ->schema([
                 Wizard::make([
-                    Wizard\Step::make('Estudiante')
-                        ->description('Seleccione el estudiante a inscribir')
-                        ->icon('heroicon-o-user')
-                        ->schema([
-                            Section::make('Información del Estudiante')
-                                ->description('Busque y seleccione el estudiante que desea inscribir')
-                                ->schema([
-                                    Select::make('estudiante_id')
-                                        ->label('Estudiante')
-                                        ->options(function () {
-                                            return Estudiante::with('persona')
-                                                ->get()
-                                                ->mapWithKeys(function ($estudiante) {
-                                                    $label = $estudiante->persona
-                                                        ? "{$estudiante->persona->nombre} {$estudiante->persona->apellido_pat} {$estudiante->persona->apellido_mat} ({$estudiante->codigo_saga})"
-                                                        : $estudiante->codigo_saga;
-                                                    return [$estudiante->id => $label];
-                                                });
-                                        })
-                                        ->searchable()
-                                        ->required()
-                                        ->live()
-                                        ->afterStateUpdated(function ($state, callable $set) {
-                                            if ($state) {
-                                                $estudiante = Estudiante::with('persona')->find($state);
-                                                if ($estudiante && $estudiante->persona) {
-                                                    $set('estudiante_nombre', "{$estudiante->persona->nombre} {$estudiante->persona->apellido_pat} {$estudiante->persona->apellido_mat}");
-                                                    $set('estudiante_ci', $estudiante->persona->carnet_identidad ?? 'N/A');
-                                                    $set('estudiante_codigo', $estudiante->codigo_saga ?? 'N/A');
-                                                    $set('estudiante_estado', $estudiante->estado_academico ?? 'N/A');
-                                                }
-                                            } else {
-                                                $set('estudiante_nombre', null);
-                                                $set('estudiante_ci', null);
-                                                $set('estudiante_codigo', null);
-                                                $set('estudiante_estado', null);
-                                            }
-                                        })
-                                        ->helperText('Busque por nombre o código SAGA')
-                                        ->columnSpanFull(),
-
-                                    Section::make('Detalles del Estudiante')
-                                        ->icon(Heroicon::OutlinedUser)
-                                        ->columnSpanFull()
-                                        ->compact()
-                                        ->columns(2)
-                                        ->schema([
-                                            TextInput::make('estudiante_nombre')
-                                                ->label('Nombre Completo')
-                                                ->default('N/A o requiere recargo')
-                                                ->disabled(),
-
-                                            TextInput::make('estudiante_ci')
-                                                ->label('Cédula de Identidad')
-                                                ->default('N/A o requiere recargo')
-                                                ->disabled(),
-
-                                            TextInput::make('estudiante_codigo')
-                                                ->label('Código SAGA')
-                                                ->default('N/A o requiere recargo')
-                                                ->disabled(),
-
-                                            TextInput::make('estudiante_estado')
-                                                ->label('Estado Académico')
-                                                ->default('N/A o requiere recargo')
-                                                ->disabled()
-                                        ])
-                                ])
-                                ->columns(2),
-                        ]),
-
-                    Wizard\Step::make('Gestión y Cursos')
-                        ->description('Seleccione la gestión y el curso')
-                        ->icon('heroicon-o-calendar')
-                        ->schema([
-                            Section::make('Gestión Académica')
-                                ->description('Configure la gestión y los cursos para la inscripción')
-                                ->schema([
-                                    Select::make('gestion_id')
-                                        ->label('Gestión')
-                                        ->options(function () {
-                                            return Gestion::query()
-                                                ->orderBy('nombre', 'desc')
-                                                ->get()
-                                                ->mapWithKeys(fn ($gestion) => [
-                                                    $gestion->id => "{$gestion->nombre} ({$gestion->fecha_inicio->format('Y-m-d')} - {$gestion->fecha_fin->format('Y-m-d')})"
-                                                ]);
-                                        })
-                                        ->searchable()
-                                        ->required()
-                                        ->live()
-                                        ->afterStateUpdated(function (callable $set) {
-                                            $set('cursos', null);
-                                            $set('condiciones', []);
-                                        })
-                                        ->helperText('Seleccione la gestión académica vigente'),
-
-                                    Select::make('cursos')
-                                        ->label('Cursos')
-                                        ->options(function (Get $get) {
-                                            $gestionId = $get('gestion_id');
-                                            if (!$gestionId) {
-                                                return [];
-                                            }
-                                            return Curso::with(['materia', 'turno', 'grupos'])
-                                                ->where('gestion_id', $gestionId)
-                                                ->where('habilitado', true)
-                                                ->get()
-                                                ->mapWithKeys(fn ($curso) => [
-                                                    $curso->id => "{$curso->materia->nombre} - {$curso->seccion} [{$curso->turno->nombre}] (" .
-                                                                ($curso->grupos->isNotEmpty() 
-                                                                    ? $curso->grupos->pluck('nombre')->implode(', ') 
-                                                                    : 'IRREGULAR') 
-                                                                . ")"
-                                                ]);
-                                        })
-                                        ->multiple()
-                                        ->searchable()
-                                        ->live()
-                                        ->afterStateUpdated(function (callable $set, $state) {
-                                            if (!$state || empty($state)) {
-                                                $set('condiciones', []);
-                                                return;
-                                            }
-
-                                            // $state es un array de IDs cuando es multiple
-                                            $cursos = Curso::with('grupos')->find($state);
-                                            
-                                            // Colección para almacenar todas las condiciones únicas
-                                            $todasLasCondiciones = collect();
-                                            
-                                            // Iterar sobre cada curso en la colección
-                                            foreach ($cursos as $curso) {
-                                                if ($curso->grupos && $curso->grupos->isNotEmpty()) {
-                                                    foreach ($curso->grupos as $grupo) {
-                                                        // Decodificar las condiciones del grupo si están en JSON
-                                                        $condicionesGrupo = is_string($grupo->condiciones)
-                                                            ? json_decode($grupo->condiciones, true)
-                                                            : $grupo->condiciones;
-                                                        
-                                                        if (is_array($condicionesGrupo) && !empty($condicionesGrupo)) {
-                                                            foreach ($condicionesGrupo as $condicion) {
-                                                                // Crear una clave única para evitar duplicados
-                                                                $claveUnica = md5(json_encode([
-                                                                    'tipo' => $condicion['tipo'] ?? '',
-                                                                    'valor' => $condicion['valor'] ?? '',
-                                                                    'operador' => $condicion['operador'] ?? '',
-                                                                ]));
-                                                                
-                                                                // Solo agregar si no existe ya
-                                                                if (!$todasLasCondiciones->has($claveUnica)) {
-                                                                    $todasLasCondiciones->put($claveUnica, array_merge($condicion, ['cumple' => false]));
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            
-                                            // Establecer las condiciones únicas
-                                            $set('condiciones', $todasLasCondiciones->values()->toArray());
-                                        })
-                                        ->disabled(fn (Get $get) => !$get('gestion_id'))
-                                        ->helperText(fn (Get $get) =>
-                                            $get('gestion_id')
-                                                ? 'Seleccione los cursos para la inscripción irregular'
-                                                : 'Primero debe seleccionar una gestión'
-                                        ),
-
-                                    Placeholder::make('cursos_info')
-                                        ->label('Información de los Cursos')
-                                        ->content(function (Get $get) {
-                                            $cursosIds = $get('cursos');
-                                            if (!$cursosIds || empty($cursosIds)) {
-                                                return 'Seleccione cursos para ver más información';
-                                            }
-
-                                            $cursos = Curso::with(['materia', 'turno', 'grupos'])->find($cursosIds);
-                                            if ($cursos->isEmpty()) {
-                                                return 'No se encontró información';
-                                            }
-
-                                            $info = "📚 Total de cursos seleccionados: " . $cursos->count() . "\n\n";
-                                            
-                                            foreach ($cursos as $curso) {
-                                                $info .= "• {$curso->materia->nombre} ({$curso->seccion}) - {$curso->turno->nombre}\n";
-                                                if ($curso->grupos && $curso->grupos->isNotEmpty()) {
-                                                    $info .= "  Grupos: " . $curso->grupos->pluck('nombre')->implode(', ') . "\n";
-                                                }
-                                            }
-
-                                            return $info;
-                                        })
-                                        ->hidden(fn (Get $get) => !filled($get('cursos')))
-                                        ->columnSpanFull(),
-
-                                    Repeater::make('condiciones')
-                                        ->label('Condiciones de los Grupos')
-                                        ->required()
-                                        ->hidden(fn (Get $get) => !filled($get('cursos')))
-                                        ->schema([
-                                            Select::make('tipo')
-                                                ->label('Tipo de Condición')
-                                                ->disabled()
-                                                ->dehydrated()
-                                                ->options([
-                                                    'edad' => '👶 Edad',
-                                                    'promedio' => '📊 Promedio Académico',
-                                                    'asistencia' => '📅 Asistencia',
-                                                    'prerequisito' => '📚 Pre-requisito',
-                                                    'nivel' => '🎓 Nivel Académico',
-                                                    'otro' => '⚙️ Otro',
-                                                ])
-                                                ->required()
-                                                ->native(false)
-                                                ->live(),
-
-                                            Grid::make(2)
-                                                ->schema([
-                                                    TextInput::make('valor')
-                                                        ->label('Valor/Descripción')
-                                                        ->required()
-                                                        ->disabled()
-                                                        ->dehydrated()
-                                                        ->placeholder('Ej: Mínimo 70%, Mayor a 15 años, etc.')
-                                                        ->maxLength(255),
-
-                                                    Select::make('operador')
-                                                        ->label('Operador')
-                                                        ->disabled()
-                                                        ->dehydrated()
-                                                        ->options([
-                                                            'mayor' => 'Mayor que (>)',
-                                                            'menor' => 'Menor que (<)',
-                                                            'igual' => 'Igual a (=)',
-                                                            'mayor_igual' => 'Mayor o igual (≥)',
-                                                            'menor_igual' => 'Menor o igual (≤)',
-                                                            'entre' => 'Entre',
-                                                            'ninguno' => 'No aplica',
-                                                        ])
-                                                        ->default('ninguno')
-                                                        ->native(false),
-                                                ]),
-
-                                            Textarea::make('descripcion')
-                                                ->label('Descripción Detallada')
-                                                ->placeholder('Información adicional sobre esta condición...')
-                                                ->rows(2)
-                                                ->readOnly()
-                                                ->columnSpanFull(),
-
-                                            Toggle::make('obligatorio')
-                                                ->label('¿Es obligatorio?')
-                                                ->default(true)
-                                                ->disabled()
-                                                ->dehydrated()
-                                                ->inline(false),
-
-                                            Toggle::make('cumple')
-                                                ->label('¿Cumple?')
-                                                ->default(false)
-                                                ->inline(false)
-                                                ->helperText('Marque si cumple con esta condición'),
-                                        ])
-                                        ->columns(2)
-                                        ->defaultItems(0)
-                                        ->reorderable(false)
-                                        ->addable(false)
-                                        ->deletable(false)
-                                        ->columnSpanFull(),
-                                ])
-                                ->columns(2),
-                                            ]),
-                    Wizard\Step::make('Detalles de Inscripción')
-                        ->description('Seleccione la gestión y el curso')
-                        ->icon('heroicon-o-calendar')
-                        ->schema([
-                            Section::make('Información de Inscripción')
-                                ->description('Datos administrativos de la inscripción')
-                                ->schema([
-                                    TextInput::make('codigo_inscripcion')
-                                        ->label('Código de Inscripción')
-                                        ->default(fn () => 'INS-' . now()->format('Y') . '-' . str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT))
-                                        ->required()
-                                        ->maxLength(50)
-                                        ->helperText('Código único para identificar esta inscripción')
-                                        ->readOnly()
-                                        ->live()
-                                        ->suffixIcon('heroicon-o-hashtag'),
-
-                                    DatePicker::make('fecha_inscripcion')
-                                        ->label('Fecha de Inscripción')
-                                        ->default(now())
-                                        ->required()
-                                        ->native(false)
-                                        ->displayFormat('d/m/Y')
-                                        ->maxDate(now())
-                                        ->suffixIcon('heroicon-o-calendar'),
-
-                                    Select::make('estado_id')
-                                        ->label('Estado')
-                                        ->searchable()
-                                        ->options(fn () => Estado::where('tipo', 'inscripcion')->pluck('nombre', 'id'))
-                                        ->default(fn () => Estado::where('nombre', 'LIKE', '%activ%')->first()?->id)
-                                        ->required()
-                                        ->suffixIcon('heroicon-o-check-badge')
-                                        ->helperText('Estado inicial de la inscripción'),
-
-                                    Section::make('Estudiante')
-                                        ->columnSpan(2)
-                                        ->schema([
-                                            Grid::make(2)
-                                                ->schema([
-                                                    TextInput::make('estudiante_nombre')
-                                                        ->label('Estudiante')
-                                                        ->columns(1)
-                                                        ->readOnly()
-                                                        ->disabled(),
-                                                    TextInput::make('estudiante_codigo')
-                                                        ->label('Código SAGA')
-                                                        ->columns(1)
-                                                        ->readOnly()
-                                                        ->disabled(),
-
-                                                    // este atributo es condicionado - si el estudiante ya esta inscrito en el curso seleccionado, entonces mostrar "El estudiante ya está inscrito en este grupo para la gestión seleccionada."
-                                                    Placeholder::make('inscripcion_validacion')
-                                                        ->label('Validación de Inscripción')
-                                                        ->content(function (Get $get) {
-                                                            $estudianteId = $get('estudiante_id');
-                                                            $grupoId = $get('grupo_id');
-                                                            if (!$grupoId) return 'Seleccione un grupo y estudiante para ver más información';
-
-                                                            $grupo = Grupo::with('cursos')->find($grupoId);
-                                                            if (!$grupo) return 'No se encontró información';
-
-                                                            $estudiante = Estudiante::with('persona')->find($estudianteId);
-                                                            if (!$estudiante) return 'No se encontró información del estudiante';
-
-                                                            $existente = Inscripcion::where('estudiante_id', $estudianteId)
-                                                                ->where('grupo_id', $grupoId)
-                                                                ->where('gestion_id', $grupo->gestion_id)
-                                                                ->first();
-
-                                                            $info = $existente
-                                                                ? "⚠️ El estudiante {$estudiante->persona->nombre} {$estudiante->persona->apellido_pat} ya está inscrito en este grupo para la gestión seleccionada y su inscripcion es invalida."
-                                                                : "✅ El estudiante {$estudiante->persona->nombre} {$estudiante->persona->apellido_pat} no está inscrito en este grupo y puede proceder con la inscripción.";
-
-
-                                                            return $info;
-                                                        })
-                                                        ->hidden(fn (Get $get) => !filled($get('grupo_id')))
-                                                        ->columnSpanFull(),
-
-
-                                                ])
-                                        ]),
-
-                                    QrCode::make('codigo_inscripcion')
-                                        ->data(fn (Get $get) => $get('codigo_inscripcion'))
-                                        ->size(250)
-                                        ->alignment('center')
-                                        ->visible(fn (Get $get) => filled($get('codigo_inscripcion'))), // Mostrar solo si hay código
-                                    Section::make('Información del Curso y Materias')
-                                        ->columnSpanFull()
-                                        ->schema([
-                                            KeyValueEntry::make('materias')
-                                                ->label('Lista de materias y profesores')
-                                                ->keyLabel("Materia")
-                                                ->valueLabel("Profesor")
-                                                ->hidden(fn (Get $get) => !filled($get('cursos')))
-                                                ->state(function (Get $get) {
-                                                    $cursosList = $get('cursos');
-                                                    if (!$cursosList) return [];
-
-                                                    $cursos = Curso::with(['materia', 'profesor.persona'])->find($cursosList);
-                                                    
-                                                    if (!$cursos) return [];
-
-                                                    $materias = [];
-                                                    foreach ($cursos as $curso) {
-                                                        $nombreMateria = $curso->materia->nombre ?? 'Sin materia';
-                                                        $nombreProfesor = $curso->profesor
-                                                            ? "{$curso->profesor->persona->nombre} {$curso->profesor->persona->apellido_pat} {$curso->profesor->persona->apellido_mat}"
-                                                            : 'Sin profesor';
-
-                                                        $materias[$nombreMateria] = $nombreProfesor;
-                                                    }
-
-                                                    return $materias;
-                                                })
-                                            ,
-                                            Text::make('grupo_info')
-                                                ->disabled()
-                                                ->content(function (Get $get) {
-                                                    $grupoId = $get('grupo_id');
-                                                    if (!$grupoId) return 'Seleccione un grupo para ver más información';
-
-                                                    $grupo = Grupo::with('cursos')->find($grupoId);
-                                                    if (!$grupo) return 'No se encontró información';
-
-                                                    $info = "📋 {$grupo->descripcion}\n\n";
-
-                                                    if ($grupo->cursos && $grupo->cursos->count() > 0) {
-                                                        $info .= "📚 Cursos asignados: " . $grupo->cursos->count();
-                                                    }
-
-                                                    return $info;
-                                                }),
-                                        ])
-                                ])
-                                ->columns(3),
-                        ])
-                        
+                    $this->getEstudianteStep(),
+                    $this->getGestionCursosStep(),
+                    $this->getDetallesInscripcionStep(),
                 ])
                 ->columnSpanFull()
                 ->submitAction(view('filament.pages.components.submit-button'))
                 ->persistStepInQueryString()
-                ->skippable(true),
-            ])->statePath('data');
+                ->skippable(false),
+            ])
+            ->statePath('data');
     }
+
+    protected function getEstudianteStep(): Wizard\Step
+    {
+        return Wizard\Step::make('Estudiante')
+            ->description('Seleccione el estudiante a inscribir')
+            ->icon('heroicon-o-user')
+            ->schema([
+                Section::make('Información del Estudiante')
+                    ->description('Busque y seleccione el estudiante que desea inscribir')
+                    ->schema([
+                        Select::make('estudiante_id')
+                            ->label('Estudiante')
+                            ->options($this->getEstudiantesOptions())
+                            ->searchable()
+                            ->required()
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn($state, callable $set) => $this->actualizarDatosEstudiante($state, $set))
+                            ->helperText('Busque por nombre, apellido o código SAGA')
+                            ->columnSpanFull()
+                            ->preload(),
+
+                        $this->getDetallesEstudianteSection(),
+                    ])
+                    ->columns(2),
+            ]);
+    }
+
+    protected function getGestionCursosStep(): Wizard\Step
+    {
+        return Wizard\Step::make('Gestión y Cursos')
+            ->description('Seleccione la gestión y los cursos')
+            ->icon('heroicon-o-calendar')
+            ->schema([
+                Section::make('Gestión Académica')
+                    ->description('Configure la gestión y los cursos para la inscripción irregular')
+                    ->schema([
+                        Select::make('gestion_id')
+                            ->label('Gestión Académica')
+                            ->options($this->getGestionesOptions())
+                            ->searchable()
+                            ->required()
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (callable $set) {
+                                $set('cursos', null);
+                                $set('condiciones', []);
+                            })
+                            ->helperText('Seleccione la gestión académica vigente')
+                            ->preload(),
+
+                        Select::make('cursos')
+                            ->label('Cursos')
+                            ->options(fn(Get $get) => $this->getCursosOptions($get('gestion_id')))
+                            ->multiple()
+                            ->searchable()
+                            ->required()
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn(callable $set, $state) => $this->procesarCondicionesCursos($set, $state))
+                            ->disabled(fn(Get $get) => !$get('gestion_id'))
+                            ->helperText(fn(Get $get) => $this->getCursosHelperText($get('gestion_id')))
+                            ->preload(),
+
+                        $this->getCursosInfoPlaceholder(),
+
+                        $this->getCondicionesRepeater(),
+                    ])
+                    ->columns(2),
+            ]);
+    }
+
+    protected function getDetallesInscripcionStep(): Wizard\Step
+    {
+        return Wizard\Step::make('Detalles de Inscripción')
+            ->description('Complete los datos administrativos')
+            ->icon('heroicon-o-document-check')
+            ->schema([
+                Section::make('Información Administrativa')
+                    ->description('Datos administrativos de la inscripción irregular')
+                    ->schema([
+                        TextInput::make('codigo_inscripcion')
+                            ->label('Código de Inscripción')
+                            ->default(fn() => $this->generarCodigoInscripcion())
+                            ->required()
+                            ->readOnly()
+                            ->maxLength(50)
+                            ->helperText('Código único auto-generado')
+                            ->suffixIcon('heroicon-o-hashtag'),
+
+                        DatePicker::make('fecha_inscripcion')
+                            ->label('Fecha de Inscripción')
+                            ->default(now())
+                            ->required()
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->maxDate(now())
+                            ->suffixIcon('heroicon-o-calendar'),
+
+                        Select::make('estado_id')
+                            ->label('Estado de Inscripción')
+                            ->searchable()
+                            ->options(fn() => Estado::where('tipo', 'inscripcion')->pluck('nombre', 'id'))
+                            ->default(fn() => $this->getEstadoDefaultId())
+                            ->required()
+                            ->suffixIcon('heroicon-o-check-badge')
+                            ->helperText('Estado inicial de la inscripción')
+                            ->preload(),
+                    ])
+                    ->columns(3),
+
+                Section::make('Resumen de Inscripción')
+                    ->description('Verifique la información antes de confirmar')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                TextInput::make('estudiante_nombre')
+                                    ->label('Estudiante')
+                                    ->readOnly()
+                                    ->disabled(),
+
+                                TextInput::make('estudiante_codigo')
+                                    ->label('Código SAGA')
+                                    ->readOnly()
+                                    ->disabled(),
+                            ]),
+
+                        $this->getValidacionInscripcionPlaceholder(),
+
+                        KeyValueEntry::make('materias_resumen')
+                            ->label('Materias y Docentes Asignados')
+                            ->keyLabel('Materia (Sección)')
+                            ->valueLabel('Docente')
+                            ->state(fn(Get $get) => $this->getMateriasProfesores($get('cursos'))),
+
+                        QrCode::make('codigo_inscripcion')
+                            ->data(fn(Get $get) => $get('codigo_inscripcion'))
+                            ->size(200)
+                            ->alignment('center')
+                            ->visible(fn(Get $get) => filled($get('codigo_inscripcion'))),
+                    ])
+                    ->columns(1)
+                    ->collapsed(false),
+            ]);
+    }
+
+    // ====================== MÉTODOS AUXILIARES ======================
+
+    protected function getEstudiantesOptions(): array
+    {
+        return Estudiante::with('persona')
+            ->whereHas('persona')
+            ->get()
+            ->mapWithKeys(function ($estudiante) {
+                $persona = $estudiante->persona;
+                $label = sprintf(
+                    "%s %s %s (%s)",
+                    $persona->nombre,
+                    $persona->apellido_pat,
+                    $persona->apellido_mat,
+                    $estudiante->codigo_saga
+                );
+                return [$estudiante->id => $label];
+            })
+            ->toArray();
+    }
+
+    protected function actualizarDatosEstudiante(?int $state, callable $set): void
+    {
+        if (!$state) {
+            $this->limpiarDatosEstudiante($set);
+            return;
+        }
+
+        $estudiante = Estudiante::with('persona')->find($state);
+        
+        if (!$estudiante || !$estudiante->persona) {
+            $this->limpiarDatosEstudiante($set);
+            return;
+        }
+
+        $persona = $estudiante->persona;
+        
+        $set('estudiante_nombre', sprintf(
+            "%s %s %s",
+            $persona->nombre,
+            $persona->apellido_pat,
+            $persona->apellido_mat
+        ));
+        $set('estudiante_ci', $persona->carnet_identidad ?? 'N/A');
+        $set('estudiante_codigo', $estudiante->codigo_saga ?? 'N/A');
+        $set('estudiante_estado', $estudiante->estado_academico ?? 'N/A');
+    }
+
+    protected function limpiarDatosEstudiante(callable $set): void
+    {
+        $set('estudiante_nombre', null);
+        $set('estudiante_ci', null);
+        $set('estudiante_codigo', null);
+        $set('estudiante_estado', null);
+    }
+
+    protected function getDetallesEstudianteSection(): Section
+    {
+        return Section::make('Detalles del Estudiante')
+            ->icon('heroicon-o-user-circle')
+            ->columnSpanFull()
+            ->compact()
+            ->columns(2)
+            ->schema([
+                TextInput::make('estudiante_nombre')
+                    ->label('Nombre Completo')
+                    ->default('Seleccione un estudiante')
+                    ->disabled(),
+
+                TextInput::make('estudiante_ci')
+                    ->label('Cédula de Identidad')
+                    ->default('N/A')
+                    ->disabled(),
+
+                TextInput::make('estudiante_codigo')
+                    ->label('Código SAGA')
+                    ->default('N/A')
+                    ->disabled(),
+
+                TextInput::make('estudiante_estado')
+                    ->label('Estado Académico')
+                    ->default('N/A')
+                    ->disabled(),
+            ]);
+    }
+
+    protected function getGestionesOptions(): array
+    {
+        return Gestion::query()
+            ->orderBy('nombre', 'desc')
+            ->get()
+            ->mapWithKeys(fn($gestion) => [
+                $gestion->id => sprintf(
+                    "%s (%s - %s)",
+                    $gestion->nombre,
+                    $gestion->fecha_inicio->format('d/m/Y'),
+                    $gestion->fecha_fin->format('d/m/Y')
+                )
+            ])
+            ->toArray();
+    }
+
+    protected function getCursosOptions(?int $gestionId): array
+    {
+        if (!$gestionId) {
+            return [];
+        }
+
+        return Curso::with(['materia', 'turno', 'grupos'])
+            ->where('gestion_id', $gestionId)
+            ->where('habilitado', true)
+            ->get()
+            ->mapWithKeys(function ($curso) {
+                $gruposNombre = $curso->grupos->isNotEmpty()
+                    ? $curso->grupos->pluck('nombre')->implode(', ')
+                    : 'IRREGULAR';
+
+                $label = sprintf(
+                    "%s - %s [%s] (%s)",
+                    $curso->materia->nombre,
+                    $curso->seccion,
+                    $curso->turno->nombre,
+                    $gruposNombre
+                );
+
+                return [$curso->id => $label];
+            })
+            ->toArray();
+    }
+
+    protected function getCursosHelperText(?int $gestionId): string
+    {
+        return $gestionId
+            ? 'Seleccione uno o más cursos para la inscripción irregular'
+            : 'Primero debe seleccionar una gestión académica';
+    }
+
+    protected function procesarCondicionesCursos(callable $set, $state): void
+    {
+        if (!$state || empty($state)) {
+            $set('condiciones', []);
+            return;
+        }
+
+        $cursos = Curso::with('grupos')->find($state);
+        $condicionesUnicas = collect();
+
+        foreach ($cursos as $curso) {
+            if (!$curso->grupos || $curso->grupos->isEmpty()) {
+                continue;
+            }
+
+            foreach ($curso->grupos as $grupo) {
+                $condicionesGrupo = $this->decodificarCondiciones($grupo->condiciones);
+
+                if (!empty($condicionesGrupo)) {
+                    foreach ($condicionesGrupo as $condicion) {
+                        $claveUnica = $this->generarClaveCondicion($condicion);
+
+                        if (!$condicionesUnicas->has($claveUnica)) {
+                            $condicionesUnicas->put(
+                                $claveUnica,
+                                array_merge($condicion, ['cumple' => false])
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        $set('condiciones', $condicionesUnicas->values()->toArray());
+    }
+
+    protected function decodificarCondiciones($condiciones): array
+    {
+        if (is_string($condiciones)) {
+            $decoded = json_decode($condiciones, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return is_array($condiciones) ? $condiciones : [];
+    }
+
+    protected function generarClaveCondicion(array $condicion): string
+    {
+        return md5(json_encode([
+            'tipo' => $condicion['tipo'] ?? '',
+            'valor' => $condicion['valor'] ?? '',
+            'operador' => $condicion['operador'] ?? '',
+        ]));
+    }
+
+    protected function getCursosInfoPlaceholder(): Placeholder
+    {
+        return Placeholder::make('cursos_info')
+            ->label('Resumen de Cursos Seleccionados')
+            ->content(fn(Get $get) => $this->generarInfoCursos($get('cursos')))
+            ->hidden(fn(Get $get) => !filled($get('cursos')))
+            ->columnSpanFull();
+    }
+
+    protected function generarInfoCursos($cursosIds): string
+    {
+        if (!$cursosIds || empty($cursosIds)) {
+            return 'Seleccione cursos para ver información detallada';
+        }
+
+        $cursos = Curso::with(['materia', 'turno', 'grupos'])->find($cursosIds);
+
+        if ($cursos->isEmpty()) {
+            return 'No se encontró información de los cursos';
+        }
+
+        $info = "📚 **Total de cursos seleccionados:** " . $cursos->count() . "\n\n";
+
+        foreach ($cursos as $curso) {
+            $info .= sprintf(
+                "• %s (%s) - %s\n",
+                $curso->materia->nombre,
+                $curso->seccion,
+                $curso->turno->nombre
+            );
+
+            if ($curso->grupos && $curso->grupos->isNotEmpty()) {
+                $info .= "  └─ Grupos: " . $curso->grupos->pluck('nombre')->implode(', ') . "\n";
+            } else {
+                $info .= "  └─ **INSCRIPCIÓN IRREGULAR** (sin grupo asignado)\n";
+            }
+        }
+
+        return $info;
+    }
+
+    protected function getCondicionesRepeater(): Repeater
+    {
+        return Repeater::make('condiciones')
+            ->label('Condiciones de los Grupos')
+            ->hidden(fn(Get $get) => !filled($get('cursos')))
+            ->schema([
+                Select::make('tipo')
+                    ->label('Tipo de Condición')
+                    ->disabled()
+                    ->dehydrated()
+                    ->options([
+                        'edad' => '👶 Edad',
+                        'promedio' => '📊 Promedio Académico',
+                        'asistencia' => '📅 Asistencia',
+                        'prerequisito' => '📚 Pre-requisito',
+                        'nivel' => '🎓 Nivel Académico',
+                        'otro' => '⚙️ Otro',
+                    ])
+                    ->required()
+                    ->native(false),
+
+                Grid::make(2)->schema([
+                    TextInput::make('valor')
+                        ->label('Valor Requerido')
+                        ->required()
+                        ->disabled()
+                        ->dehydrated()
+                        ->placeholder('Ej: 70%, 15 años, etc.')
+                        ->maxLength(255),
+
+                    Select::make('operador')
+                        ->label('Operador de Comparación')
+                        ->disabled()
+                        ->dehydrated()
+                        ->options([
+                            'mayor' => 'Mayor que (>)',
+                            'menor' => 'Menor que (<)',
+                            'igual' => 'Igual a (=)',
+                            'mayor_igual' => 'Mayor o igual (≥)',
+                            'menor_igual' => 'Menor o igual (≤)',
+                            'entre' => 'Entre',
+                            'ninguno' => 'No aplica',
+                        ])
+                        ->default('ninguno')
+                        ->native(false),
+                ]),
+
+                Textarea::make('descripcion')
+                    ->label('Descripción Adicional')
+                    ->placeholder('Detalles o aclaraciones sobre esta condición...')
+                    ->rows(2)
+                    ->readOnly()
+                    ->columnSpanFull(),
+
+                Grid::make(2)->schema([
+                    Toggle::make('obligatorio')
+                        ->label('¿Es obligatorio cumplir?')
+                        ->default(true)
+                        ->disabled()
+                        ->dehydrated()
+                        ->inline(false),
+
+                    Toggle::make('cumple')
+                        ->label('✓ El estudiante cumple')
+                        ->default(false)
+                        ->inline(false)
+                        ->helperText('Active si el estudiante cumple esta condición'),
+                ]),
+            ])
+            ->columns(2)
+            ->defaultItems(0)
+            ->reorderable(false)
+            ->addable(false)
+            ->deletable(false)
+            ->columnSpanFull();
+    }
+
+    protected function getValidacionInscripcionPlaceholder(): Placeholder
+    {
+        return Placeholder::make('validacion_inscripcion')
+            ->label('Validación de Inscripción')
+            ->content(fn(Get $get) => $this->validarInscripcionExistente(
+                $get('estudiante_id'),
+                $get('cursos'),
+                $get('gestion_id')
+            ))
+            ->hidden(fn(Get $get) => !filled($get('cursos')) || !filled($get('estudiante_id')))
+            ->columnSpanFull();
+    }
+
+    protected function validarInscripcionExistente(?int $estudianteId, ?array $cursosIds, ?int $gestionId): string
+    {
+        if (!$estudianteId || !$cursosIds || !$gestionId) {
+            return '⏳ Seleccione estudiante y cursos para validar';
+        }
+
+        $estudiante = Estudiante::with('persona')->find($estudianteId);
+        if (!$estudiante) {
+            return '⚠️ Estudiante no encontrado';
+        }
+
+        $nombreCompleto = sprintf(
+            "%s %s",
+            $estudiante->persona->nombre,
+            $estudiante->persona->apellido_pat
+        );
+
+        // Verificar inscripciones existentes
+        $inscripcionesExistentes = Inscripcion::where('estudiante_id', $estudianteId)
+            ->where('gestion_id', $gestionId)
+            ->whereIn('curso_id', $cursosIds)
+            ->with('curso.materia')
+            ->get();
+
+        if ($inscripcionesExistentes->isEmpty()) {
+            return "✅ **Validación exitosa:** {$nombreCompleto} no tiene inscripciones previas en estos cursos para la gestión seleccionada.";
+        }
+
+        $materias = $inscripcionesExistentes
+            ->pluck('curso.materia.nombre')
+            ->implode(', ');
+
+        return "⚠️ **Advertencia:** {$nombreCompleto} ya está inscrito en: {$materias}. Verifique antes de continuar.";
+    }
+
+    protected function getMateriasProfesores(?array $cursosIds): array
+    {
+        if (!$cursosIds) {
+            return [];
+        }
+
+        $cursos = Curso::with(['materia', 'profesor.persona'])->find($cursosIds);
+
+        return $cursos->mapWithKeys(function ($curso) {
+            $nombreMateria = sprintf(
+                "%s (%s)",
+                $curso->materia->nombre ?? 'Sin materia',
+                $curso->seccion ?? 'S/N'
+            );
+
+            $nombreProfesor = $curso->profesor && $curso->profesor->persona
+                ? sprintf(
+                    "%s %s %s",
+                    $curso->profesor->persona->nombre,
+                    $curso->profesor->persona->apellido_pat,
+                    $curso->profesor->persona->apellido_mat
+                )
+                : 'Sin asignar';
+
+            return [$nombreMateria => $nombreProfesor];
+        })->toArray();
+    }
+
+    protected function generarCodigoInscripcion(): string
+    {
+        $anio = now()->year;
+        $random = str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+        $uuid = Str::upper(Str::random(4));
+        
+        return "INS-IRR-{$anio}-{$random}-{$uuid}";
+    }
+
+    protected function getEstadoDefaultId(): ?int
+    {
+        return Estado::where('tipo', 'inscripcion')
+            ->where(function ($query) {
+                $query->where('nombre', 'LIKE', '%activ%')
+                    ->orWhere('nombre', 'LIKE', '%pendiente%');
+            })
+            ->first()
+            ?->id;
+    }
+
+    // ====================== MÉTODO DE CREACIÓN ======================
 
     public function create(): void
     {
-        $data = $this->form->getState();
-        
-        // Validar que todas las condiciones obligatorias se cumplan
-        /*
-        $condiciones = $data['condiciones'] ?? [];
+        try {
+            $data = $this->form->getState();
+
+            // Validar que no existan inscripciones duplicadas
+            $duplicados = $this->verificarInscripcionesDuplicadas(
+                $data['estudiante_id'],
+                $data['cursos'],
+                $data['gestion_id']
+            );
+
+            
+
+            if ($duplicados->isNotEmpty()) {
+                $materias = $duplicados->pluck('curso.materia.nombre')->implode(', ');
+                
+                Notification::make()
+                    ->title('Inscripción duplicada')
+                    ->body("El estudiante ya está inscrito en: {$materias}")
+                    ->warning()
+                    ->duration(5000)
+                    ->send();
+                
+                throw new Halt();
+            }
+
+            // Crear inscripciones en transacción
+            DB::transaction(function () use ($data) {
+                $inscripcionesCreadas = 0;
+
+                foreach ($data['cursos'] as $cursoId) {
+                    Inscripcion::create([
+                        'estudiante_id' => $data['estudiante_id'],
+                        'curso_id' => $cursoId,
+                        'gestion_id' => $data['gestion_id'],
+                        'grupo_id' => null, // Inscripción irregular no tiene grupo
+                        'estado_id' => $data['estado_id'],
+                        'fecha_inscripcion' => $data['fecha_inscripcion'],
+                        'codigo_inscripcion' => $data['codigo_inscripcion'],
+                        'tipo' => 'irregular',
+                        'condiciones_cumplidas' => json_encode($data['condiciones'] ?? []),
+                        'observaciones' => 'Inscripción irregular - Sin grupo asignado',
+                    ]);
+
+                    $inscripcionesCreadas++;
+                }
+
+                Notification::make()
+                    ->title('¡Inscripción exitosa!')
+                    ->body("Se crearon {$inscripcionesCreadas} inscripción(es) irregular(es) correctamente.")
+                    ->success()
+                    ->duration(5000)
+                    ->send();
+            });
+
+            // Limpiar formulario y redirigir
+            $this->form->fill();
+            $this->redirect(route('filament.informatica.resources.inscripcions.index'));
+
+        } catch (Halt $e) {
+            // El halt se maneja automáticamente
+            return;
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error al crear inscripción')
+                ->body("Ocurrió un error: {$e->getMessage()}")
+                ->danger()
+                ->duration(8000)
+                ->send();
+
+            logger()->error('Error en inscripción irregular', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
+
+    protected function validarCondicionesObligatorias(array $condiciones): bool
+    {
+        if (empty($condiciones)) {
+            return true; // Si no hay condiciones, la validación pasa
+        }
+
         $condicionesIncumplidas = collect($condiciones)->filter(function ($condicion) {
             return ($condicion['obligatorio'] ?? false) && !($condicion['cumple'] ?? false);
         });
 
-        if ($condicionesIncumplidas->isNotEmpty()) {
-            \Filament\Notifications\Notification::make()
-                ->title('Condiciones no cumplidas')
-                ->body('El estudiante no cumple con todas las condiciones obligatorias.')
-                ->danger()
-                ->send();
-            return;
-        }
-        */
-
-        // Aquí va tu lógica para crear las inscripciones
-        foreach ($data['cursos'] as $cursoId) {
-            Inscripcion::create([
-                'estudiante_id' => $data['estudiante_id'],
-                'curso_id' => $cursoId,
-                'gestion_id' => $data['gestion_id'],
-                'tipo' => 'irregular',
-                // ... otros campos
-            ]);
-        }
-
-        \Filament\Notifications\Notification::make()
-            ->title('Inscripción creada exitosamente')
-            ->success()
-            ->send();
+        return $condicionesIncumplidas->isEmpty();
     }
+
+    protected function verificarInscripcionesDuplicadas(int $estudianteId, array $cursosIds, int $gestionId)
+    {
+        return Inscripcion::where('estudiante_id', $estudianteId)
+            ->where('gestion_id', $gestionId)
+            ->whereIn('curso_id', $cursosIds)
+            ->with('curso.materia')
+            ->get();
+    }
+
+    // ====================== CONFIGURACIÓN DE PÁGINA ======================
 
     public function getSubheading(): ?string
     {
-        return 'Complete el formulario para inscribir a un estudiante de manera irregular a uno o más cursos.';
+        return 'Complete el formulario para inscribir a un estudiante de manera irregular a uno o más cursos sin asignación de grupo.';
     }
 
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('view_inscriptions')
+            Action::make('ver_inscripciones')
                 ->label('Ver inscripciones')
                 ->icon('heroicon-o-list-bullet')
                 ->color('gray')
                 ->url(route('filament.informatica.resources.inscripcions.index')),
+
+            Action::make('ayuda')
+                ->label('Ayuda')
+                ->icon('heroicon-o-question-mark-circle')
+                ->color('info')
+                ->modalHeading('Guía de Inscripción Irregular')
+                ->modalDescription('La inscripción irregular permite inscribir estudiantes a cursos sin asignarles a un grupo específico. Esto es útil para casos especiales o excepcionales.')
+                ->modalWidth('2xl')
+                ->modalCancelActionLabel('Cerrar'),
         ];
     }
 }
