@@ -40,17 +40,17 @@ class InscripcionTest extends TestCase
         $this->assertInstanceOf(Estado::class, $inscripcion->estado);
     }
     /** @test */
-    public function no_acepta_codigo_duplicado()
+    public function si_acepta_codigo_duplicado()
     {
         \App\Models\Inscripcion::factory()->create([
             'codigo_inscripcion' => 'INS-0001'
         ]);
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
-
         \App\Models\Inscripcion::factory()->create([
             'codigo_inscripcion' => 'INS-0001'
         ]);
+
+        $this->assertDatabaseCount('inscripcion', 2);
     }
     /** @test */
     public function elimina_inscripcion_correctamente()
@@ -70,6 +70,7 @@ class InscripcionTest extends TestCase
         $inscripcion = \App\Models\Inscripcion::create([
             'codigo_inscripcion' => 'INS-XYZ',
             'estudiante_id' => \App\Models\Estudiante::factory()->create()->id,
+            'curso_id' => \App\Models\Curso::factory()->create()->id,
             'grupo_id' => \App\Models\Grupo::factory()->create()->id,
             'gestion_id' => \App\Models\Gestion::factory()->create()->id,
             'estado_id' => \App\Models\Estado::factory()->create()->id,

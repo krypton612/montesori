@@ -26,7 +26,7 @@ class DocumentoInscripcionTest extends TestCase
     {
         $documento_inscripcion = DocumentoInscripcion::factory()->create();
 
-        $this->assertNotNull($documento_inscripcion->inscripcion);
+        $this->assertNotNull($documento_inscripcion->estudiante);
         $this->assertNotNull($documento_inscripcion->tipo_documento);
     }
 

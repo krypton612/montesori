@@ -74,4 +74,13 @@ class Estudiante extends Model
             ->withPivot(['parentestco', 'vive_con_el', 'es_principal'])
             ->withTimestamps();
     }
+
+    public function documentos($codigo_inscripcion = null)
+    {
+        $query = $this->hasMany(DocumentoInscripcion::class, 'estudiante_id');
+        if ($codigo_inscripcion) {
+            $query->where('codigo_inscripcion', $codigo_inscripcion);
+        }
+        return $query;
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Curso;
 use App\Models\Estado;
 use App\Models\Estudiante;
 use App\Models\Gestion;
@@ -27,6 +28,7 @@ class InscripcionFactory extends Factory
             'estudiante_id' => Estudiante::factory(),
             'grupo_id' => Grupo::factory(),
             'gestion_id' => Gestion::factory(),
+            'curso_id' => Curso::factory(),
             'fecha_inscripcion' => $this->faker->date(),
             'estado_id' => Estado::factory(),
         ];

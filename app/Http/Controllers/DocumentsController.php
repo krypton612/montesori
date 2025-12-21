@@ -174,16 +174,177 @@ class DocumentsController extends Controller
         return "data:$mime;base64,$data";
     }
 
+    protected function getInscripcionData($id)
+{
+    // Cargar inscripción con relaciones necesarias según tipo
+    $inscripcion = Inscripcion::with([
+        'estudiante.persona',
+        'estudiante.apoderados.persona',
+        'estudiante.discapacidades',
+        'gestion',
+        'grupo.gestion',
+        'grupo.cursos.materia',
+        'grupo.cursos.profesor.persona',
+        'curso.materia',
+        'curso.profesor.persona',
+    ])->findOrFail($id);
+
+    $estudiante = $inscripcion->estudiante;
+    $persona = $estudiante->persona;
+    
+    // Determinar tipo de inscripción y obtener datos correspondientes
+    $esInscripcionIrregular = is_null($inscripcion->grupo_id);
+    
+    if ($esInscripcionIrregular) {
+        // INSCRIPCIÓN IRREGULAR - Usar curso directo
+        $gestion = $inscripcion->gestion;
+        $grupo = null;
+        $asignaturas = [];
+        $profesores = [];
+        
+        if ($inscripcion->curso) {
+            $asignaturas[] = [
+                'nombre' => $inscripcion->curso->materia->nombre ?? 'N/A',
+                'seccion' => $inscripcion->curso->seccion ?? 'N/A',
+            ];
+            
+            if ($inscripcion->curso->profesor && $inscripcion->curso->profesor->persona) {
+                $profesores[] = $inscripcion->curso->profesor->persona->getNombreCompletoAttribute();
+            }
+        }
+        
+        $tipo_inscripcion = 'IRREGULAR';
+        $grupo_nombre = 'SIN GRUPO ASIGNADO';
+        
+    } else {
+        // INSCRIPCIÓN REGULAR - Usar grupo
+        $grupo = $inscripcion->grupo;
+        $gestion = $grupo->gestion ?? $inscripcion->gestion;
+        $asignaturas = [];
+        $profesores = [];
+        
+        if ($grupo && $grupo->cursos->isNotEmpty()) {
+            foreach ($grupo->cursos as $curso) {
+                $asignaturas[] = [
+                    'nombre' => $curso->materia->nombre ?? 'N/A',
+                    'seccion' => $curso->seccion ?? 'N/A',
+                ];
+                
+                if ($curso->profesor && $curso->profesor->persona) {
+                    $profesores[] = $curso->profesor->persona->getNombreCompletoAttribute();
+                }
+            }
+        }
+        
+        $tipo_inscripcion = 'REGULAR';
+        $grupo_nombre = $grupo->nombre ?? 'N/A';
+    }
+
+    // Apoderado principal
+    $apoderadoPrincipalPivot = $estudiante->apoderados->where('pivot.es_principal', true)->first();
+    $apoderadoPrincipal = $apoderadoPrincipalPivot ? $apoderadoPrincipalPivot->persona : null;
+
+    // Discapacidades
+    $discapacidades = $estudiante->discapacidades;
+    $tiene_discapacidad = $discapacidades->isNotEmpty();
+    $discapacidades_nombres = $discapacidades->pluck('nombre')->toArray();
+    $observaciones_discapacidad = $discapacidades->isNotEmpty() 
+        ? $discapacidades->first()->pivot->observacion 
+        : '';
+
+    // Codificación de imágenes
+    $logoBase64 = $this->imageToBase64('images/logo.png') 
+        ?? $this->imageToBase64('assets/logo.png');
+    
+    // Foto del estudiante
+    $fotoBase64 = null;
+    if (!empty($estudiante->foto_url)) {
+        try {
+            $relativePath = $estudiante->foto_url;
+            $fotoBase64 = 'data:image/png;base64,' . base64_encode(
+                Storage::disk('public')->get($relativePath)
+            );
+        } catch (\Exception $e) {
+            $fotoBase64 = null;
+        }
+    }
+
+    // QR Code data
+    $qrCodeData = $inscripcion->codigo_inscripcion ?? 'INSCRIPCION-' . $id;
+
+    // Formatear nombre de gestión
+    $gestion_nombre = 'N/A';
+    if ($gestion) {
+        $anioInicio = $gestion->fecha_inicio ? $gestion->fecha_inicio->format('Y') : $gestion->nombre;
+        $anioFin = $gestion->fecha_fin ? $gestion->fecha_fin->format('Y') : ($gestion->nombre + 1);
+        $gestion_nombre = "{$anioInicio} - {$anioFin}";
+    }
+
+    // Datos para la vista
+    $datos = [
+        // Tipo de inscripción
+        'tipo_inscripcion' => $tipo_inscripcion,
+        'es_irregular' => $esInscripcionIrregular,
+        
+        // Personales
+        'codigo_inscripcion' => $inscripcion->codigo_inscripcion,
+        'nombre' => $persona->nombre,
+        'apellido_pat' => $persona->apellido_pat,
+        'apellido_mat' => $persona->apellido_mat,
+        'carnet_identidad' => $persona->carnet_identidad,
+        'fecha_nacimiento_fmt' => $persona->fecha_nacimiento 
+            ? $persona->fecha_nacimiento->format('d/m/Y') 
+            : 'N/A',
+        'edad' => $persona->calcularEdad(),
+        'genero' => $persona->genero ?? 'N/A',
+        'direccion' => $persona->direccion,
+        'telefono_principal' => $persona->telefono_principal,
+        'email_personal' => $persona->email_personal,
+        'nombre_estudiante_completo' => $persona->getNombreCompletoAttribute(),
+
+        // Apoderado
+        'tutor_nombre' => $apoderadoPrincipal 
+            ? $apoderadoPrincipal->getNombreCompletoAttribute() 
+            : 'N/A',
+        'tutor_ocupacion' => $apoderadoPrincipalPivot->ocupacion ?? 'N/A',
+
+        // Académicos
+        'nivel' => $grupo->nivel ?? 'N/A',
+        'grado' => $grupo->grado ?? 'N/A',
+        'grupo_nombre' => $grupo_nombre,
+        'gestion_nombre' => $gestion_nombre,
+        'unidad_academica' => config('app.name', 'EMANUEL MONTESSORI'),
+        'turno' => $grupo->turno->nombre ?? 'N/A',
+
+        // Asignaturas y Profesores
+        'asignaturas' => collect($asignaturas)->pluck('nombre')->toArray(),
+        'profesores' => array_unique($profesores),
+        'profesores_nombres' => implode(', ', array_unique($profesores)),
+        
+        // Discapacidades
+        'tiene_discapacidad' => $tiene_discapacidad,
+        'discapacidades_nombres' => $discapacidades_nombres,
+        'observaciones_discapacidad' => $observaciones_discapacidad,
+
+        // Metadatos
+        'fecha_impresion' => Carbon::now()->format('d \d\e F \d\e Y \a \l\a\s H:i'),
+        'logo_path' => $logoBase64,
+        'foto_url' => $fotoBase64,
+        'qr_code_data' => $qrCodeData,
+    ];
+
+    return $datos;
+}
     /**
      * Lógica común para obtener los datos de la Hoja de Inscripción.
      */
-    protected function getInscripcionData($id)
+    protected function getInscripcionData2($id)
     {
         $inscripcion = Inscripcion::with(['estudiante.persona', 'estudiante.apoderados.persona', 'estudiante.discapacidades', 'grupo.gestion'])->findOrFail($id);
         $estudiante = $inscripcion->estudiante;
         $persona = $estudiante->persona;
         $grupo = $inscripcion->grupo;
-        $gestion = $grupo->gestion;
+        $gestion = $grupo->gestion ?? 'N/A';
 
         // Apoderado principal
         $apoderadoPrincipalPivot = $estudiante->apoderados->where('pivot.es_principal', true)->first();
@@ -197,6 +358,8 @@ class DocumentsController extends Controller
 
         // Asignaturas (PLACEHOLDER - DEBES REEMPLAZAR CON TU LÓGICA REAL)
         $inscripcion->load('grupo.cursos.materia');
+
+        
 
         $asignaturas = $inscripcion->grupo->cursos
             ->pluck('materia.nombre')

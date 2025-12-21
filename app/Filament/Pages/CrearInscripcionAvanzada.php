@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Components\QrCode;
 use App\Filament\Fields\QrCodeView;
+use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\Gestion;
 use App\Models\Grupo;
@@ -46,9 +47,9 @@ class CrearInscripcionAvanzada extends Page implements HasForms
 
     protected static string|null|\UnitEnum $navigationGroup = 'Inscripcion Estudiantil';
 
-    protected static ?string $navigationLabel = 'Inscripción Avanzada';
+    protected static ?string $navigationLabel = 'Inscripción Regular';
 
-    protected static ?string $title = 'Formulario de Inscripción Avanzada';
+    protected static ?string $title = 'Formulario de Inscripción Regular';
 
 
     public ?array $data = [];
@@ -177,7 +178,6 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ]);
                                         })
                                         ->searchable()
-                                        ->required()
                                         ->live()
                                         ->afterStateUpdated(function (callable $set, $state) {
                                             if ($state) {
@@ -226,6 +226,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->hidden(fn (Get $get) => !filled($get('grupo_id')))
                                         ->columnSpanFull(),
 
+                                   
                                     Repeater::make('condiciones')
                                         ->label('Condiciones')
                                         ->required()
@@ -304,7 +305,6 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                 ])
                                 ->columns(2),
                         ]),
-
                     Wizard\Step::make('Detalles de Inscripción')
                         ->description('Complete los datos de la inscripción')
                         ->icon('heroicon-o-document-text')
@@ -343,7 +343,6 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->label('Código de Inscripción')
                                         ->default(fn () => 'INS-' . now()->format('Y') . '-' . str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT))
                                         ->required()
-                                        ->unique(Inscripcion::class, 'codigo_inscripcion')
                                         ->maxLength(50)
                                         ->helperText('Código único para identificar esta inscripción')
                                         ->readOnly()
@@ -533,12 +532,14 @@ class CrearInscripcionAvanzada extends Page implements HasForms
             $data = $this->form->getState();
 
             // Validar que no exista una inscripción duplicada
+
             $existente = Inscripcion::where('estudiante_id', $data['estudiante_id'])
                 ->where('grupo_id', $data['grupo_id'])
                 ->where('gestion_id', $data['gestion_id'])
                 ->first();
 
             if ($existente) {
+
                 Notification::make()
                     ->title('Inscripción duplicada')
                     ->body('El estudiante ya está inscrito en este grupo para la gestión seleccionada.')
@@ -550,26 +551,63 @@ class CrearInscripcionAvanzada extends Page implements HasForms
 
             DB::beginTransaction();
 
-            // Crear la inscripción
-            $inscripcion = Inscripcion::create([
-                'codigo_inscripcion' => $data['codigo_inscripcion'],
-                'estudiante_id' => $data['estudiante_id'],
-                'grupo_id' => $data['grupo_id'],
-                'gestion_id' => $data['gestion_id'],
-                'fecha_inscripcion' => $data['fecha_inscripcion'],
-                'estado_id' => $data['estado_id'],
-                'condiciones' => $data['condiciones']
-            ]);
+            // Crear la inscripción apartir de un grupo.
+            $grupo = Grupo::find($data['grupo_id']);
 
-            // Procesar documentos si existen
+            foreach ($grupo->cursos as $curso) {
+
+                $inscripcion = Inscripcion::create([
+                    'codigo_inscripcion' => $data['codigo_inscripcion'],
+                    'fecha_inscripcion' => $data['fecha_inscripcion'],
+                    'estado_id' => $data['estado_id'],
+                    'estudiante_id' => $data['estudiante_id'],
+                    'grupo_id' => $data['grupo_id'],
+                    'gestion_id' => $data['gestion_id'],
+                    'curso_id' => $curso->id,
+                ]);
+            }
+
+            // Crear inscripciones para cursos irregulares si existen
+            /*
+            if (!empty($cursos_irregulares)) {
+                foreach ($cursos_irregulares as $cursoIrregularId) {
+                    // Verificar si ya existe una inscripción para este curso irregular
+                    $existenteIrregular = Inscripcion::where('estudiante_id', $data['estudiante_id'])
+                        ->where('curso_id', $cursoIrregularId)
+                        ->where('gestion_id', $data['gestion_id'])
+                        ->first();
+                    if ($existenteIrregular) {
+                        continue; // Saltar si ya existe
+                    }
+                    $inscripcionIrregular = Inscripcion::create([
+                        'codigo_inscripcion' => $data['codigo_inscripcion'],
+                        'fecha_inscripcion' => $data['fecha_inscripcion'],
+                        'estado_id' => $data['estado_id'],
+                        'estudiante_id' => $data['estudiante_id'],
+                        'grupo_id' => null, // No pertenece a un grupo regular
+                        'gestion_id' => $data['gestion_id'],
+                        'curso_id' => $cursoIrregularId,
+                    ]);
+
+
+                }
+            }
+            */
+
+            // Procesar documentos para ambos tipos de inscripciones - revisar modelo y relaciones. 
+
+            
             if (!empty($data['documentos'])) {
                 foreach ($data['documentos'] as $documento) {
                     $inscripcion->documentos()->create([
                         'tipo_documento_id' => $documento['tipo_documento_id'],
                         'nombre_archivo' => $documento['nombre_archivo'],
+                        'codigo_inscripcion' => $data['codigo_inscripcion'],
+                        'estudiante_id' => $data['estudiante_id'],
                     ]);
                 }
             }
+            
 
             DB::commit();
 

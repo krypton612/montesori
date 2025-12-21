@@ -52,6 +52,13 @@ class InscripcionsTable
                             ->searchable()
                             ->sortable(),
 
+                        TextColumn::make('curso.nombre_completo')
+                            ->label('Curso')
+                            ->searchable()
+                            ->sortable()
+                            ->badge('secondary')
+                            ,
+
                         TextColumn::make('gestion.nombre')
                             ->label('Gestión')
                             ->searchable()
@@ -61,6 +68,7 @@ class InscripcionsTable
                             ->label('Fecha')
                             ->date()
                             ->sortable(),
+                        
 
                         TextColumn::make('estado.nombre')
                             ->label('Estado')
