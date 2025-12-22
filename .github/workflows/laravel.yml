@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "develop" ]
 
+permissions: # eliminar luego de pruebas
+  contents: read
+  packages: write
+
 jobs:
   laravel-tests:
 
