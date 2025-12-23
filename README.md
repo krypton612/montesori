@@ -39,6 +39,7 @@ Estos objetivos se desglosan en los siguientes milestones principales del proyec
 - **Módulo Pagos / Finanzas**  
 - **Módulo Reportes / Dashboard**  
 - **Módulo Núcleo / Seguridad / Usuarios**  
+- **Módulo Generador de Horarios** 📅 *(ver [documentación](docs/SCHEDULE_GENERATOR.md))*
 
 > Para más detalles puedes revisar la sección de *Milestones* en GitHub.
 
