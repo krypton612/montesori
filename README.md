@@ -1,4 +1,4 @@
-# SISTEMA EMANUEL MONTESORI
+# SISTEMA EMANUEL MONTESORI 1.0.1
 
 Aplicación web basada en **Laravel** y el ecosistema de **FilamentPHP** para la gestión académica y administrativa de la **Institución Pedagógica Infantil "Emanuel Montesori"**.  
 El proyecto está organizado en módulos (estudiantes, inscripciones, pagos, evaluaciones, etc.) y se estructura mediante *milestones* en GitHub.  
@@ -27,6 +27,7 @@ El proyecto **EMANUEL MONTESORI** tiene como objetivos principales:
 - Gestionar pagos, deudas y el estado del estudiante (habilitado/bloqueado).
 - Ofrecer un panel de reportes y dashboard con estadísticas relevantes.
 - Implementar un núcleo de seguridad con usuarios, roles y permisos.
+- Implementacion continua basada en CI y DC con docker compose
 
 Estos objetivos se desglosan en los siguientes milestones principales del proyecto (entre otros):
 
