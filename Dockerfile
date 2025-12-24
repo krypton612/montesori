@@ -70,6 +70,8 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
 # Generar autoloader optimizado
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 
+# Publicar vendor assets si los hay
+RUN php artisan vendor:publish --all --force
 
 # =====================================================
 # 3️⃣ Stage: Runtime Final
