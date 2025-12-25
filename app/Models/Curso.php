@@ -95,4 +95,10 @@ class Curso extends Model
         return "{$this->seccion} - {$this->materia->nombre}";
     }
 
+    public function getTotalInscripcionesAttribute()
+    {
+        return $this->inscripciones()->count();
+    }
+
+    
 }
