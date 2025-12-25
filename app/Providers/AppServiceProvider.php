@@ -26,15 +26,19 @@ class AppServiceProvider extends ServiceProvider
 
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
             $panelSwitch->modalHeading('Paneles disponibles')
-                        ->modalWidth('md')
                         ->icons([
+                            'finanzas' => 'heroicon-o-currency-dollar',
                             'informatica' => 'heroicon-o-home',
                             'inscripcion' => 'heroicon-o-academic-cap',
+                            'profesor' => 'heroicon-o-user-group',
                         ], $asImage = false)
-                        ->iconSize(32)
+                        ->iconSize(24)
+                        ->modalWidth('md')
                         ->labels([
+                            'finanzas' => 'Finanzas',
                             'informatica' => 'Administración',
                             'inscripcion' => 'Inscripciones',
+                            'profesor' => 'Profesores',
                         ]);
         });
     }
