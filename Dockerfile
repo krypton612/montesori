@@ -47,6 +47,14 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
     gd \
     intl
 
+# ── Imagick ───────────────────────────────────────────────
+RUN apk add --no-cache --virtual .imagick-build-deps \
+    $PHPIZE_DEPS \
+    imagemagick-dev \
+    && pecl install imagick \
+    && docker-php-ext-enable imagick \
+    && apk del .imagick-build-deps
+
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -116,6 +124,16 @@ RUN --mount=type=cache,target=/var/cache/apk \
     intl && \
     apk del .build-deps
 
+# ── Imagick runtime + extensión ───────────────────────────
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache --virtual .imagick-build-deps \
+    $PHPIZE_DEPS \
+    imagemagick-dev \
+    && pecl install imagick \
+    && docker-php-ext-enable imagick \
+    && apk add --no-cache imagemagick \
+    && apk del .imagick-build-deps
+    
 # Copiar aplicación completa (código + vendor generado)
 COPY --from=php-builder --chown=www-data:www-data /app /var/www/html
 
