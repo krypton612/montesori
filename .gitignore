@@ -1,4 +1,5 @@
 storage/debugbar/*
+notes.md
 *.log
 .DS_Store
 .env
