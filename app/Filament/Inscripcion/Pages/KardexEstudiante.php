@@ -29,7 +29,7 @@ class KardexEstudiante extends Page implements HasForms, HasTable
     protected string $view = 'filament.pages.kardex-estudiante';
 
     protected static string|null|\UnitEnum $navigationGroup = 'Consultas';
-    protected static ?string $navigationLabel = 'Kardex (Estudiante)';
+    protected static ?string $navigationLabel = 'Kardex Estudiante';
     protected static ?string $title = 'Kardex del Estudiante';
 
     public ?array $data = [];
@@ -49,7 +49,6 @@ class KardexEstudiante extends Page implements HasForms, HasTable
                 ->icon(Heroicon::OutlinedEye)
                 ->visible(fn () => filled($getId()))
                 ->modalHeading('Vista previa - Kardex (Estudiante)')
-                // OJO: no usamos MaxWidth (te daba error)
                 ->modalContent(fn () => view('modals.preview-document', [
                     'url' => route('documents.kardex_estudiante.preview', $getId()),
                 ]))
@@ -122,66 +121,95 @@ class KardexEstudiante extends Page implements HasForms, HasTable
                                 return "{$nombre} ({$saga}) - CI: {$ci}";
                             })
                             ->live()
-                            ->afterStateUpdated(function () {
-                                $this->resetTable();
-                            })
+                            ->afterStateUpdated(fn () => $this->resetTable())
                             ->helperText('Puede buscar por nombre, CI o código SAGA.')
                             ->columnSpanFull(),
 
-                        Section::make('Resumen del estudiante')
+                        /* =============================
+                           RESUMEN DEL ESTUDIANTE (MEJORADO)
+                           ============================= */
+                        Section::make('Datos del estudiante')
+                            ->description('Información general del estudiante.')
+                            ->icon(Heroicon::OutlinedIdentification)
                             ->schema([
                                 Grid::make(4)->schema([
                                     Placeholder::make('nombre_completo')
-                                        ->label('Nombre')
-                                        ->content(fn (Get $get) => $this->getEstudiantePersona($get('estudiante_id'))?->nombre_completo ?? '—'),
+                                        ->label('Nombre completo')
+                                        ->icon(Heroicon::OutlinedUser)
+                                        ->content(fn (Get $get) =>
+                                            $this->getEstudiantePersona($get('estudiante_id'))?->nombre_completo ?? '—'
+                                        ),
 
                                     Placeholder::make('ci')
                                         ->label('CI')
-                                        ->content(fn (Get $get) => $this->getEstudiantePersona($get('estudiante_id'))?->carnet_identidad ?? '—'),
+                                        ->icon(Heroicon::OutlinedIdentification)
+                                        ->content(fn (Get $get) =>
+                                            $this->getEstudiantePersona($get('estudiante_id'))?->carnet_identidad ?? '—'
+                                        ),
 
                                     Placeholder::make('saga')
                                         ->label('Código SAGA')
-                                        ->content(fn (Get $get) => Estudiante::find($get('estudiante_id'))?->codigo_saga ?? '—'),
+                                        ->icon(Heroicon::OutlinedHashtag)
+                                        ->content(fn (Get $get) =>
+                                            Estudiante::find($get('estudiante_id'))?->codigo_saga ?? '—'
+                                        ),
 
                                     Placeholder::make('edad')
                                         ->label('Edad')
+                                        ->icon(Heroicon::OutlinedCake)
                                         ->content(function (Get $get) {
                                             $p = $this->getEstudiantePersona($get('estudiante_id'));
-                                            return $p ? ($p->calcularEdad() . ' años') : '—';
+                                            return $p ? "{$p->calcularEdad()} años" : '—';
                                         }),
                                 ]),
 
-                                Grid::make(2)->schema([
+                                Grid::make(4)->schema([
                                     Placeholder::make('direccion')
                                         ->label('Dirección')
-                                        ->content(fn (Get $get) => $this->getEstudiantePersona($get('estudiante_id'))?->direccion ?? '—'),
+                                        ->icon(Heroicon::OutlinedMapPin)
+                                        ->content(fn (Get $get) =>
+                                            $this->getEstudiantePersona($get('estudiante_id'))?->direccion ?? '—'
+                                        ),
 
-                                    Placeholder::make('contacto')
-                                        ->label('Contacto')
-                                        ->content(function (Get $get) {
-                                            $p = $this->getEstudiantePersona($get('estudiante_id'));
-                                            if (!$p) return '—';
-                                            $tel1 = $p->telefono_principal ?? '—';
-                                            $tel2 = $p->telefono_secundario ?? '—';
-                                            $email = $p->email_personal ?? '—';
-                                            return "Tel1: {$tel1} | Tel2: {$tel2} | Email: {$email}";
-                                        }),
+                                    Placeholder::make('telefono_principal')
+                                        ->label('Teléfono principal')
+                                        ->icon(Heroicon::OutlinedPhone)
+                                        ->content(fn (Get $get) =>
+                                            $this->getEstudiantePersona($get('estudiante_id'))?->telefono_principal ?? '—'
+                                        ),
+
+                                    Placeholder::make('telefono_secundario')
+                                        ->label('Teléfono secundario')
+                                        ->icon(Heroicon::OutlinedDevicePhoneMobile)
+                                        ->content(fn (Get $get) =>
+                                            $this->getEstudiantePersona($get('estudiante_id'))?->telefono_secundario ?? '—'
+                                        ),
+
+                                    Placeholder::make('email')
+                                        ->label('Correo electrónico')
+                                        ->icon(Heroicon::OutlinedEnvelope)
+                                        ->content(fn (Get $get) =>
+                                            $this->getEstudiantePersona($get('estudiante_id'))?->email_personal ?? '—'
+                                        ),
                                 ]),
-
                                 Placeholder::make('discapacidad')
                                     ->label('Discapacidad(es)')
+                                    ->icon(Heroicon::OutlinedExclamationTriangle)
                                     ->content(function (Get $get) {
                                         $id = $get('estudiante_id');
                                         if (!$id) return '—';
 
                                         $e = Estudiante::with('discapacidades')->find($id);
-                                        if (!$e) return '—';
+                                        if (!$e || $e->discapacidades->isEmpty()) {
+                                            return 'No registra discapacidad';
+                                        }
 
-                                        if ($e->discapacidades->isEmpty()) return 'No registra discapacidad';
-
-                                        return $e->discapacidades->pluck('nombre')->implode(', ');
+                                        return $e->discapacidades
+                                            ->map(fn ($d) => "🟡 {$d->nombre}")
+                                            ->implode(' | ');
                                     }),
                             ])
+                            ->collapsible()
                             ->collapsed(false),
                     ]),
             ])
@@ -215,35 +243,37 @@ class KardexEstudiante extends Page implements HasForms, HasTable
             ->columns([
                 TextColumn::make('codigo_inscripcion')
                     ->label('Código')
+                    ->badge()
+                    ->color('primary')
                     ->searchable()
-                    ->sortable()
-                    ->placeholder('—'),
+                    ->sortable(),
 
                 TextColumn::make('grupo.nombre')
                     ->label('Grupo')
-                    ->sortable()
-                    ->placeholder('—'),
+                    ->icon(Heroicon::OutlinedUsers)
+                    ->sortable(),
 
                 TextColumn::make('grupo.gestion.nombre')
                     ->label('Gestión')
-                    ->sortable()
-                    ->placeholder('—'),
+                    ->badge()
+                    ->color('success')
+                    ->sortable(),
 
                 TextColumn::make('created_at')
-                    ->label('Registrado')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable()
-                    ->placeholder('—'),
+                    ->label('Fecha de inscripción')
+                    ->icon(Heroicon::OutlinedCalendar)
+                    ->date('d/m/Y')
+                    ->sortable(),
             ])
             ->striped()
             ->deferLoading()
-            ->emptyStateHeading('Sin historial')
-            ->emptyStateDescription('Seleccione un estudiante para ver su historial de inscripciones.')
-            ->emptyStateIcon('heroicon-o-document-text');
+            ->emptyStateHeading('Sin historial de inscripciones')
+            ->emptyStateDescription('Seleccione un estudiante para ver su historial.')
+            ->emptyStateIcon('heroicon-o-academic-cap');
     }
 
     public function getSubheading(): ?string
     {
-        return 'Consulta completa del estudiante (datos personales, contacto, discapacidad e historial de inscripciones).';
+        return 'Consulta completa del estudiante (datos personales, contacto, discapacidad e historial).';
     }
 }

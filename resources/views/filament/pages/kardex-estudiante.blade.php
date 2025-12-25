@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div class="space-y-6">
+    <div class="space-y-8">
         <form wire:submit.prevent>
             {{ $this->form }}
         </form>

@@ -5,21 +5,21 @@
     <title>KARDEX DEL ESTUDIANTE</title>
 
     <style>
-        /* Reservamos espacio abajo para firmas */
-        @page { margin: 1.2cm 1.2cm 5.8cm 1.2cm; }
+        @page { margin: 1.2cm 1.2cm 5.5cm 1.2cm; }
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 8pt;
-            line-height: 1.25;
+            font-size: 8.5pt;
+            line-height: 1.3;
             color: #1a1a1a;
             margin: 0;
         }
 
-        /* Marca de agua */
+        /* ========= MARCA DE AGUA ========= */
         .watermark {
             position: fixed;
-            inset: 0;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             z-index: -1000;
             opacity: 0.10;
             pointer-events: none;
@@ -27,113 +27,97 @@
         .watermark img {
             width: 70%;
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
         }
 
-        /* Header */
+        /* ========= HEADER ========= */
         .header {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 10px;
         }
         .header td { vertical-align: middle; }
-        .logo { width: 22%; }
-        .title { width: 56%; text-align: center; }
-        .qr { width: 22%; text-align: right; }
+        .logo { width: 25%; }
+        .title { width: 50%; text-align: center; }
+        .photo { width: 25%; text-align: right; }
 
         .title h1 {
             margin: 0;
-            font-size: 12pt;
+            font-size: 13pt;
             font-weight: bold;
         }
+
         .title h2 {
             margin: 3px 0 0 0;
             font-size: 9pt;
             font-weight: normal;
         }
 
+        .photo-box {
+            width: 95px;
+            height: 115px;
+            border: 1px solid #333;
+            margin-left: auto;
+            text-align: center;
+            line-height: 115px;
+            font-size: 8pt;
+        }
+
+        /* ========= SECCIONES ========= */
         .section-title {
             font-size: 10pt;
             font-weight: bold;
-            margin: 10px 0 6px;
+            margin: 10px 0 6px 0;
             padding-bottom: 4px;
             border-bottom: 1px solid #333;
         }
 
-        /* Bloque estudiante */
-        .student-table {
+        table.data {
             width: 100%;
             border-collapse: collapse;
             border: 1px solid #333;
             margin-bottom: 8px;
         }
-        .student-table td {
+
+        table.data td, table.data th {
             padding: 6px 8px;
+            border: 1px solid #333;
             vertical-align: top;
         }
-        .student-photo {
-            width: 18%;
-            border-right: 1px solid #333;
-            text-align: center;
-        }
-        .photo-box {
-            width: 95px;
-            height: 115px;
-            border: 1px solid #333;
-            margin: 0 auto 6px auto;
-            line-height: 115px;
-            font-size: 8pt;
-        }
 
-        .kv {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .kv td { padding: 2px 0; }
-        .label { font-weight: bold; }
-
-        /* Tabla simple */
-        table.simple {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 8pt;
-        }
-        table.simple th,
-        table.simple td {
-            border: 1px solid #333;
-            padding: 5px;
-        }
-        table.simple th {
+        table.data th {
             background: #f0f0f0;
-            text-align: center;
-            font-weight: bold;
+            width: 28%;
+            text-align: left;
         }
 
-        /* Firmas UTIC (igual estilo del ejemplo) */
+        /* ========= FOOTER FIRMAS ========= */
         .footer-signatures {
             position: fixed;
             left: 1.2cm;
             right: 1.2cm;
-            bottom: 0.9cm;
+            bottom: 0.8cm;
         }
+
         .sign-table {
             width: 100%;
             border-collapse: collapse;
         }
+
         .sign-table td {
             width: 33.33%;
             text-align: center;
             vertical-align: top;
-            border: none;
-            padding-top: 55px; /* espacio para firmar (como tu ejemplo) */
+            padding-top: 35px;
         }
+
         .sign-line {
             border-top: 1px solid #111;
             width: 80%;
             margin: 0 auto 5px auto;
         }
+
         .stamp-box {
             height: 50px;
             line-height: 50px;
@@ -142,6 +126,7 @@
             margin: 0 auto 6px auto;
             font-size: 8pt;
         }
+
         .footer-meta {
             margin-top: 8px;
             font-size: 7.5pt;
@@ -152,119 +137,113 @@
         .clear { clear: both; }
     </style>
 </head>
-
 <body>
 
+{{-- ===== MARCA DE AGUA ===== --}}
 @if(!empty($logo_path))
 <div class="watermark">
     <img src="{{ $logo_path }}" alt="Marca de Agua">
 </div>
 @endif
 
+{{-- ===== HEADER ===== --}}
 <table class="header">
     <tr>
         <td class="logo">
             @if(!empty($logo_path))
-                <img src="{{ $logo_path }}" alt="Logo" style="width: 95px; height: auto;">
+                <img src="{{ $logo_path }}" style="width: 95px;">
             @endif
         </td>
-
         <td class="title">
-            <h1>KARDEX DEL ESTUDIANTE</h1>
-            <h2>Datos personales y condición de discapacidad</h2>
+            <h1>{{ $institucion }}</h1>
+            <h2>KARDEX DEL ESTUDIANTE</h2>
         </td>
-
-        <td class="qr">
-            <strong>{{ $codigo_saga ?? '—' }}</strong>
-        </td>
-    </tr>
-</table>
-
-<div class="section-title">DATOS DEL ESTUDIANTE</div>
-
-<table class="student-table">
-    <tr>
-        <td class="student-photo">
+        <td class="photo">
             <div class="photo-box">
                 @if(!empty($foto_url))
-                    <img src="{{ $foto_url }}" alt="Foto" style="width: 95px; height: 115px; object-fit: cover;">
+                    <img src="{{ $foto_url }}" style="width: 95px; height: 115px; object-fit: cover;">
                 @else
                     FOTO
                 @endif
             </div>
-            <div style="font-weight: bold;">ESTUDIANTE</div>
-        </td>
-
-        <td class="student-data">
-            <table class="kv">
-                <tr>
-                    <td colspan="2"><span class="label">Nombre:</span> {{ $estudiante_nombre ?? '—' }}</td>
-                </tr>
-                <tr>
-                    <td style="width: 50%;"><span class="label">CI:</span> {{ $estudiante_ci ?? '—' }}</td>
-                    <td style="width: 50%;"><span class="label">Código SAGA:</span> {{ $codigo_saga ?? '—' }}</td>
-                </tr>
-                <tr>
-                    <td><span class="label">Edad:</span> {{ $estudiante_edad ?? '—' }}</td>
-                    <td><span class="label">Fecha Nac.:</span> {{ $estudiante_fn ?? '—' }}</td>
-                </tr>
-                <tr>
-                    <td><span class="label">Teléfono:</span> {{ $estudiante_tel ?? '—' }}</td>
-                    <td><span class="label">Email:</span> {{ $estudiante_email ?? '—' }}</td>
-                </tr>
-                <tr>
-                    <td colspan="2"><span class="label">Dirección:</span> {{ $estudiante_dir ?? '—' }}</td>
-                </tr>
-            </table>
         </td>
     </tr>
 </table>
 
-<div class="section-title">DISCAPACIDAD</div>
+{{-- ===== DATOS PERSONALES ===== --}}
+<div class="section-title">I. DATOS PERSONALES</div>
 
-<table class="simple">
-    <thead>
-        <tr>
-            <th>Registro</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td style="text-align:center;">
-                {{ $discapacidades ?? 'No registra discapacidad' }}
-            </td>
-        </tr>
-    </tbody>
+<table class="data">
+    <tr><th>Nombre Completo</th><td>{{ $estudiante_nombre }}</td></tr>
+    <tr><th>Cédula de Identidad</th><td>{{ $estudiante_ci }}</td></tr>
+    <tr><th>Código SAGA</th><td>{{ $codigo_saga }}</td></tr>
+    <tr><th>Fecha de Nacimiento</th><td>{{ $estudiante_fn }}</td></tr>
+    <tr><th>Edad</th><td>{{ $estudiante_edad }} años</td></tr>
+    <tr><th>Teléfono</th><td>{{ $estudiante_tel }}</td></tr>
+    <tr><th>Email</th><td>{{ $estudiante_email }}</td></tr>
+    <tr><th>Dirección</th><td>{{ $estudiante_dir }}</td></tr>
 </table>
 
-{{-- FIRMAS SIEMPRE ABAJO --}}
+{{-- ===== DISCAPACIDAD ===== --}}
+<div class="section-title">II. INFORMACIÓN DE DISCAPACIDAD</div>
+
+@if(!$tiene_discapacidad)
+    <table class="data">
+        <tr>
+            <td>No registra discapacidad.</td>
+        </tr>
+    </table>
+@else
+    <table class="data">
+        <thead>
+            <tr>
+                <th style="width:25%;">Discapacidad</th>
+                <th style="width:30%;">Descripción</th>
+                <th style="width:25%;">Observación</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($discapacidades as $d)
+                <tr>
+                    <td>{{ $d['nombre'] }}</td>
+                    <td>{{ $d['descripcion'] ?? '—' }}</td>
+                    <td>{{ $d['observacion'] ?? '—' }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@endif
+
+{{-- ===== OBSERVACIONES ===== --}}
+<div class="section-title">III. OBSERVACIONES</div>
+<table class="data">
+    <tr><td style="height:60px;"></td></tr>
+</table>
+
+{{-- ===== FIRMAS ===== --}}
 <div class="footer-signatures">
     <table class="sign-table">
         <tr>
             <td>
                 <div class="sign-line"></div>
                 <strong>FIRMA RESPONSABLE</strong><br>
-                (Encargado/a)
+                Unidad Administrativa
             </td>
-
+            <td>
+                <div class="stamp-box">SELLO UTIC</div>
+                Firma / Sello
+            </td>
             <td>
                 <div class="sign-line"></div>
-                <strong>FIRMA UTIC</strong><br>
-                (Unidad de Tecnologías)
-                <div class="stamp-box" style="margin-top:8px;">SELLO UTIC</div>
-            </td>
+                <strong>FIRMA APODERADO</strong><br>
 
-            <td>
-                <div class="sign-line"></div>
-                <strong>FIRMA</strong><br>
-                (Conformidad)
             </td>
         </tr>
     </table>
 
     <div class="footer-meta">
-        <div class="left">Fecha de impresión: {{ $fecha_impresion ?? '—' }}</div>
-        <div class="right">{{ $institucion ?? 'EMANUEL MONTESSORI' }}</div>
+        <div class="left">Fecha de impresión: {{ $fecha_impresion }}</div>
+        <div class="right">{{ $institucion }}</div>
         <div class="clear"></div>
     </div>
 </div>
