@@ -60,7 +60,22 @@ class Usuario extends Authenticatable implements FilamentUser
     
     public function canAccessPanel(Panel $panel): bool
     {
-        // return str_ends_with($this->email, '@yourdomain.com') && $this->hasVerifiedEmail();
+        if ($panel->getId() === 'informatica') {
+            return str_ends_with($this->email, '@adm.montessori.com.bo');
+        }
+
+        if ($panel->getId() === 'profesor') {
+            return str_ends_with($this->email, '@prof.montessori.com.bo');
+        }
+
+        if ($panel->getId() === 'finanzas') {
+            return str_ends_with($this->email, '@eco.montessori.com.bo');
+        }
+
+        if ($panel->getId() === 'inscripcion') {
+            return str_ends_with($this->email, '@ins.montessori.com.bo');
+        }
+
         return true;
     }
 }
