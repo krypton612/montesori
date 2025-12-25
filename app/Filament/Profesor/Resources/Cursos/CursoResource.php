@@ -11,6 +11,7 @@ use App\Filament\Profesor\Resources\Cursos\Schemas\CursoForm;
 use App\Filament\Profesor\Resources\Cursos\Schemas\CursoInfolist;
 use App\Filament\Profesor\Resources\Cursos\Tables\CursosTable;
 use App\Filament\Profesor\Resources\Cursos\RelationManagers\EvaluacionesRelationManager;
+use App\Filament\Resources\Profesors\ProfesorResource;
 use App\Models\Curso;
 use App\Models\Evaluacion;
 use BackedEnum;
@@ -19,6 +20,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
@@ -30,6 +32,8 @@ class CursoResource extends Resource
     protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::AcademicCap;
 
     protected static ?string $recordTitleAttribute = 'Curso';
+
+
 
     protected static string|UnitEnum|null $navigationGroup = 'Gestión Académica';
 
@@ -62,9 +66,7 @@ class CursoResource extends Resource
     {
         return [
             'index' => ListCursos::route('/'),
-            'create' => CreateCurso::route('/create'),
             'view' => ViewCurso::route('/{record}'),
-            'edit' => EditCurso::route('/{record}/edit'),
         ];
     }
 
@@ -74,5 +76,17 @@ class CursoResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->whereHas('profesor.persona.usuario', function (Builder $query) {
+                $query->where('id', auth()->id());
+            });
+            
+        // O más directo si tienes el profesor_id:
+        // return parent::getEloquentQuery()
+        //     ->where('profesor_id', auth()->user()->persona->profesor->id);
     }
 }

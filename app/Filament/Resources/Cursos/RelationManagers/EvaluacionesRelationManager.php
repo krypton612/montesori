@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Cursos\RelationManagers;
 
 use Filament\Actions\ActionGroup;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -49,7 +50,7 @@ class EvaluacionesRelationManager extends RelationManager
                             ->searchable()
                             ->preload()
                             ->native(false)
-                            ->disabled(fn ($livewire) => $livewire instanceof \Filament\Tables\Actions\EditAction),
+                            ->disabled(fn ($livewire) => $livewire instanceof EditAction),
 
                         Select::make('estado_id')
                             ->label('Estado')
