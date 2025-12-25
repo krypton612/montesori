@@ -60,6 +60,10 @@ class Usuario extends Authenticatable implements FilamentUser
     
     public function canAccessPanel(Panel $panel): bool
     {
+
+        // en vez de validar por dominio del email, validar por permisos o roles del usuario
+        // esto permitira a un usuario tener acceso a multiples paneles si tiene los permisos o roles adecuados
+
         if ($panel->getId() === 'informatica') {
             return str_ends_with($this->email, '@adm.montessori.com.bo');
         }
