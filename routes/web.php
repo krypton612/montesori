@@ -26,3 +26,9 @@ Route::get('kardex-apoderados/{id}/download', [DocumentsController::class, 'desc
 
 Route::get('kardex-apoderados/{id}/preview', [DocumentsController::class, 'previewKardexApoderados'])
     ->name('documents.kardex_apoderados.preview');
+
+Route::get('kardex-estudiante/{id}/download', [DocumentsController::class, 'descargarKardexEstudiante'])
+    ->name('documents.kardex_estudiante.download');
+
+Route::get('kardex-estudiante/{id}/preview', [DocumentsController::class, 'previewKardexEstudiante'])
+    ->name('documents.kardex_estudiante.preview');
