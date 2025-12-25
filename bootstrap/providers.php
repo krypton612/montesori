@@ -5,4 +5,5 @@ return [
     App\Providers\Filament\FinanzasPanelProvider::class,
     App\Providers\Filament\InformaticaPanelProvider::class,
     App\Providers\Filament\InscripcionPanelProvider::class,
+    App\Providers\Filament\ProfesorPanelProvider::class,
 ];
