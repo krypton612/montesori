@@ -149,7 +149,7 @@ class CrearEstudianteAvanzada extends Page implements HasForms
 
     protected function isValidCi(string $ci): bool
     {
-        return (bool) preg_match('/^\d{8,12}$/', $ci);
+        return (bool) preg_match('/^\d{7,12}$/', $ci);
     }
 
     // =========================================================
@@ -188,19 +188,18 @@ class CrearEstudianteAvanzada extends Page implements HasForms
             }
         }
 
-        // CI estudiante: numérico >= 8
+        // CI estudiante: numérico >= 7
         $ci = $this->normalizeCiDigits($data['carnet_identidad'] ?? null);
         $data['carnet_identidad'] = $ci;
 
         if ($ci === '' || !$this->isValidCi($ci)) {
-            $errors['carnet_identidad'] = 'El CI debe contener solo números y tener al menos 8 dígitos (máx. 12).';
+            $errors['carnet_identidad'] = 'El CI debe contener solo números y tener al menos 7 dígitos (máx. 12).';
         } else {
             if (Persona::where('carnet_identidad', $ci)->exists()) {
                 $errors['carnet_identidad'] = 'Ya existe una persona registrada con este CI.';
             }
         }
 
-        // fecha nacimiento estudiante: >= 10 años
         $fechaNac = $data['fecha_nacimiento'] ?? null;
         if (empty($fechaNac)) {
             $errors['fecha_nacimiento'] = 'Debe ingresar la fecha de nacimiento.';
@@ -209,9 +208,7 @@ class CrearEstudianteAvanzada extends Page implements HasForms
                 $fn = Carbon::parse($fechaNac)->startOfDay();
                 if ($fn->greaterThan(Carbon::today())) {
                     $errors['fecha_nacimiento'] = 'La fecha de nacimiento no puede ser futura.';
-                } elseif ($fn->greaterThan(Carbon::today()->subYears(10))) {
-                    $errors['fecha_nacimiento'] = 'El estudiante debe tener al menos 10 años.';
-                } elseif ($fn->lessThan(Carbon::today()->subYears(120))) {
+                }elseif ($fn->lessThan(Carbon::today()->subYears(120))) {
                     $errors['fecha_nacimiento'] = 'La fecha de nacimiento parece inválida (muy antigua).';
                 }
             } catch (\Throwable $e) {
