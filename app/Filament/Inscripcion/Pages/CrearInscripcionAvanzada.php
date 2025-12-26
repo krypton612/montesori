@@ -22,8 +22,10 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
@@ -45,8 +47,8 @@ class CrearInscripcionAvanzada extends Page implements HasForms
     protected string $view = 'filament.pages.crear-inscripcion-avanzada';
 
     protected static string|null|\UnitEnum $navigationGroup = 'Inscripcion Estudiantil';
-    protected static ?string $navigationLabel = 'Inscripción Avanzada';
-    protected static ?string $title = 'Formulario de Inscripción Avanzada';
+    protected static ?string $navigationLabel = 'Inscripción Regular';
+    protected static ?string $title = 'Formulario de Inscripción Regular';
 
     public ?array $data = [];
 
@@ -56,7 +58,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
     }
 
     // =========================================================
-    // Helpers para que los errores se vean con statePath('data')
+    // Helpers para errores
     // =========================================================
 
     protected function prefixStatePathErrors(array $errors): array
@@ -88,23 +90,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
     }
 
     // =========================================================
-    // LOCK exacto según tu relación belongsToMany (curso_grupo)
-    // =========================================================
-
-    protected function lockCursosDeGrupo(int $grupoId)
-    {
-        $cursoIds = CursoGrupo::where('grupo_id', $grupoId)->pluck('curso_id')->all();
-
-        if (empty($cursoIds)) {
-            return collect();
-        }
-
-        // Lock real de cupos: filas de "curso"
-        return Curso::whereIn('id', $cursoIds)->lockForUpdate()->get();
-    }
-
-    // =========================================================
-    // RESTRICCIONES (pre-check sin lock + check final con docs)
+    // RESTRICCIONES
     // =========================================================
 
     protected function validateRestricciones(array $data, bool $requireDocs = true): void
@@ -154,7 +140,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
             );
         }
 
-        // 2) gestión válida + habilitada + fecha dentro del rango
+        // 2) gestión válida + fecha dentro del rango
         $gestion = Gestion::find($data['gestion_id']);
 
         if (!$gestion) {
@@ -163,36 +149,33 @@ class CrearInscripcionAvanzada extends Page implements HasForms
             ]);
         }
 
-        if (property_exists($gestion, 'habilitado') && $gestion->habilitado === false) {
-            $this->fail('Gestión no habilitada', 'La gestión seleccionada no está habilitada para inscripciones.', [
-                'gestion_id' => 'Gestión no habilitada.',
-            ]);
-        }
-
         $fecha = $data['fecha_inscripcion'] ?? null;
 
-        if ($fecha && $gestion->fecha_inicio && $gestion->fecha_fin) {
-            try {
-                $f = Carbon::parse($fecha)->startOfDay();
-                $inicio = Carbon::parse($gestion->fecha_inicio)->startOfDay();
-                $fin = Carbon::parse($gestion->fecha_fin)->endOfDay();
-
-                if ($f->lt($inicio)) {
-                    $this->fail('Fecha inválida', 'La fecha de inscripción es anterior al inicio de la gestión.', [
-                        'fecha_inscripcion' => 'Debe estar dentro del rango de la gestión.',
-                    ]);
-                }
-
-                if ($f->gt($fin)) {
-                    $this->fail('Fecha inválida', 'La fecha de inscripción es posterior al fin de la gestión.', [
-                        'fecha_inscripcion' => 'Debe estar dentro del rango de la gestión.',
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                $this->fail('Fecha inválida', 'La fecha de inscripción no tiene un formato válido.', [
-                    'fecha_inscripcion' => 'Fecha inválida.',
-                ]);
+        try {
+            if (!$fecha) {
+                throw new \Exception('La fecha de inscripción es obligatoria.');
             }
+
+            $fechaInscripcion = Carbon::parse($fecha)->startOfDay();
+
+            $inicioGestion = Carbon::parse($gestion->fecha_inicio)->startOfDay();
+            $finGestion    = Carbon::parse($gestion->fecha_fin)->endOfDay();
+
+            if ($fechaInscripcion->lt($inicioGestion) || $fechaInscripcion->gt($finGestion)) {
+                throw new \Exception('Debe estar dentro del rango de la gestión.');
+            }
+
+        } catch (\Exception $e) {
+
+            $this->fail(
+                'Fecha inválida',
+                $e->getMessage(), // 👈 CLAVE (observación de tu manager)
+                [
+                    'fecha_inscripcion' => 'Fecha inválida.',
+                ]
+            );
+
+            return;
         }
 
         // 3) grupo activo + pertenece a la gestión + con cursos
@@ -259,22 +242,10 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                 ['condiciones' => 'Hay condiciones obligatorias sin cumplir.']
             );
         }
-
-        // 6) documentos: SOLO si estamos validando final (submit)
-        if ($requireDocs) {
-            $docs = collect($data['documentos'] ?? []);
-            if ($docs->isEmpty()) {
-                $this->fail(
-                    'Faltan documentos',
-                    'Debe adjuntar al menos un documento para registrar la inscripción.',
-                    ['documentos' => 'Adjunte al menos un documento.']
-                );
-            }
-        }
     }
 
     // =========================================================
-    // FORM
+    // FORM - Manteniendo el diseño simple del primer código
     // =========================================================
 
     public function form(Schema $form): Schema
@@ -298,7 +269,6 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                     $label = $estudiante->persona
                                                         ? "{$estudiante->persona->nombre} {$estudiante->persona->apellido_pat} {$estudiante->persona->apellido_mat} ({$estudiante->codigo_saga})"
                                                         : $estudiante->codigo_saga;
-
                                                     return [$estudiante->id => $label];
                                                 });
                                         })
@@ -526,7 +496,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                 'grupo_id'          => $get('grupo_id'),
                                 'fecha_inscripcion' => $get('fecha_inscripcion'),
                                 'condiciones'       => $get('condiciones'),
-                                // OJO: aquí NO exigimos documentos, porque aún no estás en el Step "Documentos"
+                                // Sin documentos todavía
                                 'documentos'        => $get('documentos'),
                             ];
 
@@ -574,8 +544,8 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                     Select::make('estado_id')
                                         ->label('Estado')
                                         ->searchable()
-                                        ->options(fn () => Estado::whereRaw("upper(tipo) = 'INSCRIPCION'")->pluck('nombre', 'id'))
-                                        ->default(fn () => Estado::whereRaw("upper(tipo) = 'INSCRIPCION'")->where('nombre', 'Inscrito')->value('id'))
+                                        ->options(fn () => Estado::where('tipo', 'inscripcion')->pluck('nombre', 'id'))
+                                        ->default(fn () => Estado::where('nombre', 'LIKE', '%activ%')->first()?->id)
                                         ->required()
                                         ->suffixIcon('heroicon-o-check-badge')
                                         ->helperText('Estado inicial de la inscripción'),
@@ -635,7 +605,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                     Section::make('Información del Curso y Materias')
                                         ->columnSpanFull()
                                         ->schema([
-                                            \Filament\Infolists\Components\KeyValueEntry::make('materias')
+                                            KeyValueEntry::make('materias')
                                                 ->label('Lista de materias y profesores')
                                                 ->keyLabel("Materia")
                                                 ->valueLabel("Profesor")
@@ -689,12 +659,11 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                 ->schema([
                                     Repeater::make('documentos')
                                         ->label('Documentos')
-                                        ->minItems(1)
-                                        ->required()
+                                        ->minItems(0)  // Allow zero items
                                         ->schema([
                                             Select::make('tipo_documento_id')
                                                 ->label('Tipo de Documento')
-                                                ->options(fn () => TipoDocumento::whereRaw("upper(tipo) = 'INSCRIPCION'")->pluck('nombre', 'id'))
+                                                ->options(fn() => TipoDocumento::where('tipo', 'inscripcion')->pluck('nombre', 'id'))
                                                 ->required()
                                                 ->searchable()
                                                 ->live()
@@ -705,7 +674,6 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ->directory('inscripciones/documentos')
                                                 ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                                                 ->maxSize(5120)
-                                                ->required()
                                                 ->downloadable()
                                                 ->previewable()
                                                 ->columnSpan(1),
@@ -717,7 +685,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->itemLabel(fn (array $state): ?string =>
                                             TipoDocumento::find($state['tipo_documento_id'] ?? null)?->nombre ?? 'Nuevo documento'
                                         )
-                                        ->defaultItems(1)
+                                        ->defaultItems(0)  // No items by default, optional
                                         ->columnSpanFull()
                                         ->deleteAction(fn (Action $action) => $action->requiresConfirmation()),
                                 ])
@@ -733,7 +701,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
     }
 
     // =========================================================
-    // CREATE (con lockForUpdate REAL en cursos del grupo)
+    // CREATE - Con locks y manejo de cupos
     // =========================================================
 
     public function create(): void
@@ -742,11 +710,11 @@ class CrearInscripcionAvanzada extends Page implements HasForms
             $data = $this->form->getState();
 
             // Validación final (AHORA sí exige documentos)
-            $this->validateRestricciones($data, requireDocs: true);
+            $this->validateRestricciones($data, requireDocs: false);
 
             DB::beginTransaction();
 
-            // Lock del grupo (opcional, pero sano)
+            // Lock del grupo
             $grupoLocked = Grupo::whereKey($data['grupo_id'])->lockForUpdate()->first();
             if (!$grupoLocked) {
                 $this->fail('Grupo no encontrado', 'El grupo seleccionado no existe.', [
@@ -754,16 +722,17 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                 ]);
             }
 
-            // Lock REAL de cupos (curso)
-            $cursosLocked = $this->lockCursosDeGrupo((int) $data['grupo_id']);
-
-            if ($cursosLocked->isEmpty()) {
+            // Lock de cursos del grupo para manejo de cupos
+            $cursoIds = CursoGrupo::where('grupo_id', $data['grupo_id'])->pluck('curso_id')->all();
+            if (empty($cursoIds)) {
                 $this->fail('Grupo sin cursos', 'Este grupo no tiene cursos/materias asignadas.', [
                     'grupo_id' => 'Grupo sin cursos.',
                 ]);
             }
 
-            // Re-chequeo cupos bajo lock (anti “sobreinscripción”)
+            $cursosLocked = Curso::whereIn('id', $cursoIds)->lockForUpdate()->get();
+
+            // Re-chequeo cupos bajo lock
             $llenos = $cursosLocked->filter(fn ($c) =>
                 $c->cupo_maximo !== null && (int) $c->cupo_actual >= (int) $c->cupo_maximo
             );
@@ -779,7 +748,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                 ]);
             }
 
-            // Re-chequeo duplicado (seguridad)
+            // Re-chequeo duplicado
             $existente = Inscripcion::where('estudiante_id', $data['estudiante_id'])
                 ->where('grupo_id', $data['grupo_id'])
                 ->where('gestion_id', $data['gestion_id'])
@@ -793,43 +762,49 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                 );
             }
 
-            // Crear inscripción
-            $inscripcion = Inscripcion::create([
-                'codigo_inscripcion' => $data['codigo_inscripcion'],
-                'estudiante_id'      => $data['estudiante_id'],
-                'grupo_id'           => $data['grupo_id'],
-                'gestion_id'         => $data['gestion_id'],
-                'fecha_inscripcion'  => $data['fecha_inscripcion'],
-                'estado_id'          => $data['estado_id'],
-                'condiciones'        => $data['condiciones'] ?? [],
-            ]);
-
-            // Documentos
-            foreach (($data['documentos'] ?? []) as $documento) {
-                $inscripcion->documentos()->create([
-                    'tipo_documento_id' => $documento['tipo_documento_id'],
-                    'nombre_archivo'    => $documento['nombre_archivo'],
+            // Crear una inscripción por cada curso del grupo
+            $inscripcionesCreadas = [];
+            foreach ($cursosLocked as $curso) {
+                $inscripcion = Inscripcion::create([
+                    'codigo_inscripcion' => $data['codigo_inscripcion'],
+                    'estudiante_id'      => $data['estudiante_id'],
+                    'grupo_id'           => $data['grupo_id'],
+                    'gestion_id'         => $data['gestion_id'],
+                    'curso_id'           => $curso->id,
+                    'fecha_inscripcion'  => $data['fecha_inscripcion'],
+                    'estado_id'          => $data['estado_id'],
+                    'condiciones'        => $data['condiciones'] ?? [],
                 ]);
+
+                $inscripcionesCreadas[] = $inscripcion;
             }
 
-            // Incrementar cupo_actual de TODOS los cursos del grupo (ya lockeados)
+            // Documentos (asociar a la primera inscripción o crear relación apropiada)
+            if (!empty($inscripcionesCreadas) && !empty($data['documentos'])) {
+                $inscripcionPrincipal = $inscripcionesCreadas[0];
+                foreach ($data['documentos'] as $documento) {
+                    $inscripcionPrincipal->documentos()->create([
+                        'tipo_documento_id' => $documento['tipo_documento_id'],
+                        'nombre_archivo'    => $documento['nombre_archivo'],
+                    ]);
+                }
+            }
+
+            // Incrementar cupo_actual de TODOS los cursos del grupo
             Curso::whereIn('id', $cursosLocked->pluck('id')->all())
                 ->update(['cupo_actual' => DB::raw('cupo_actual + 1')]);
-
-            // Marcar estudiante inscrito (opcional)
-            Estudiante::whereKey($data['estudiante_id'])
-                ->update(['estado_academico' => 'inscrito']);
 
             DB::commit();
 
             Notification::make()
                 ->title('¡Inscripción creada exitosamente!')
-                ->body("La inscripción {$data['codigo_inscripcion']} ha sido registrada correctamente.")
+                ->body("La inscripción {$data['codigo_inscripcion']} ha sido registrada correctamente para {$cursosLocked->count()} cursos.")
                 ->success()
                 ->seconds(5)
                 ->send();
 
             $this->redirect(route('filament.inscripcion.resources.inscripcions.index'));
+
         } catch (Halt $exception) {
             return;
         } catch (ValidationException $e) {
@@ -837,7 +812,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
         } catch (QueryException $e) {
             DB::rollBack();
 
-            $sqlState = $e->errorInfo[0] ?? null; // Postgres: 23505 unique_violation
+            $sqlState = $e->errorInfo[0] ?? null;
             if ($sqlState === '23505') {
                 $this->fail('No se puede registrar', 'Hay datos duplicados (restricción de unicidad). Revise e intente nuevamente.', [
                     '_db' => 'Registro duplicado detectado.',

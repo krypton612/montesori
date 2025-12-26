@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Estudiante;
 use App\Models\Inscripcion;
+use App\Models\Discapacidad;
+use App\Models\DiscapacidadEstudiante;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -191,51 +193,51 @@ class DocumentsController extends Controller
 
     $estudiante = $inscripcion->estudiante;
     $persona = $estudiante->persona;
-    
+
     // Determinar tipo de inscripción y obtener datos correspondientes
     $esInscripcionIrregular = is_null($inscripcion->grupo_id);
-    
+
     if ($esInscripcionIrregular) {
         // INSCRIPCIÓN IRREGULAR - Usar curso directo
         $gestion = $inscripcion->gestion;
         $grupo = null;
         $asignaturas = [];
         $profesores = [];
-        
+
         if ($inscripcion->curso) {
             $asignaturas[] = [
                 'nombre' => $inscripcion->curso->materia->nombre ?? 'N/A',
                 'seccion' => $inscripcion->curso->seccion ?? 'N/A',
             ];
-            
+
             if ($inscripcion->curso->profesor && $inscripcion->curso->profesor->persona) {
                 $profesores[] = $inscripcion->curso->profesor->persona->getNombreCompletoAttribute();
             }
         }
-        
+
         $tipo_inscripcion = 'IRREGULAR';
         $grupo_nombre = 'SIN GRUPO ASIGNADO';
-        
+
     } else {
         // INSCRIPCIÓN REGULAR - Usar grupo
         $grupo = $inscripcion->grupo;
         $gestion = $grupo->gestion ?? $inscripcion->gestion;
         $asignaturas = [];
         $profesores = [];
-        
+
         if ($grupo && $grupo->cursos->isNotEmpty()) {
             foreach ($grupo->cursos as $curso) {
                 $asignaturas[] = [
                     'nombre' => $curso->materia->nombre ?? 'N/A',
                     'seccion' => $curso->seccion ?? 'N/A',
                 ];
-                
+
                 if ($curso->profesor && $curso->profesor->persona) {
                     $profesores[] = $curso->profesor->persona->getNombreCompletoAttribute();
                 }
             }
         }
-        
+
         $tipo_inscripcion = 'REGULAR';
         $grupo_nombre = $grupo->nombre ?? 'N/A';
     }
@@ -248,14 +250,14 @@ class DocumentsController extends Controller
     $discapacidades = $estudiante->discapacidades;
     $tiene_discapacidad = $discapacidades->isNotEmpty();
     $discapacidades_nombres = $discapacidades->pluck('nombre')->toArray();
-    $observaciones_discapacidad = $discapacidades->isNotEmpty() 
-        ? $discapacidades->first()->pivot->observacion 
+    $observaciones_discapacidad = $discapacidades->isNotEmpty()
+        ? $discapacidades->first()->pivot->observacion
         : '';
 
     // Codificación de imágenes
-    $logoBase64 = $this->imageToBase64('images/logo.png') 
+    $logoBase64 = $this->imageToBase64('images/logo.png')
         ?? $this->imageToBase64('assets/logo.png');
-    
+
     // Foto del estudiante
     $fotoBase64 = null;
     if (!empty($estudiante->foto_url)) {
@@ -285,15 +287,15 @@ class DocumentsController extends Controller
         // Tipo de inscripción
         'tipo_inscripcion' => $tipo_inscripcion,
         'es_irregular' => $esInscripcionIrregular,
-        
+
         // Personales
         'codigo_inscripcion' => $inscripcion->codigo_inscripcion,
         'nombre' => $persona->nombre,
         'apellido_pat' => $persona->apellido_pat,
         'apellido_mat' => $persona->apellido_mat,
         'carnet_identidad' => $persona->carnet_identidad,
-        'fecha_nacimiento_fmt' => $persona->fecha_nacimiento 
-            ? $persona->fecha_nacimiento->format('d/m/Y') 
+        'fecha_nacimiento_fmt' => $persona->fecha_nacimiento
+            ? $persona->fecha_nacimiento->format('d/m/Y')
             : 'N/A',
         'edad' => $persona->calcularEdad(),
         'genero' => $persona->genero ?? 'N/A',
@@ -303,8 +305,8 @@ class DocumentsController extends Controller
         'nombre_estudiante_completo' => $persona->getNombreCompletoAttribute(),
 
         // Apoderado
-        'tutor_nombre' => $apoderadoPrincipal 
-            ? $apoderadoPrincipal->getNombreCompletoAttribute() 
+        'tutor_nombre' => $apoderadoPrincipal
+            ? $apoderadoPrincipal->getNombreCompletoAttribute()
             : 'N/A',
         'tutor_ocupacion' => $apoderadoPrincipalPivot->ocupacion ?? 'N/A',
 
@@ -320,7 +322,7 @@ class DocumentsController extends Controller
         'asignaturas' => collect($asignaturas)->pluck('nombre')->toArray(),
         'profesores' => array_unique($profesores),
         'profesores_nombres' => implode(', ', array_unique($profesores)),
-        
+
         // Discapacidades
         'tiene_discapacidad' => $tiene_discapacidad,
         'discapacidades_nombres' => $discapacidades_nombres,
@@ -359,22 +361,22 @@ class DocumentsController extends Controller
         // Asignaturas (PLACEHOLDER - DEBES REEMPLAZAR CON TU LÓGICA REAL)
         $inscripcion->load('grupo.cursos.materia');
 
-        
+
 
         $asignaturas = $inscripcion->grupo->cursos
             ->pluck('materia.nombre')
             ->toArray();
         // Codificación de imágenes
         $logoBase64 = $this->imageToBase64('images/logo.png') ?? $this->imageToBase64('assets/logo.png');
-        
+
 
         // Obtener la ruta relativa desde la base de datos
         $relativePath = $estudiante->foto_url;
 
         // Opción 1: Usar Storage directamente (RECOMENDADO)
-        
+
         $fotoBase64 = 'data:image/png;base64,'.base64_encode(Storage::disk('public')->get($relativePath));
-       
+
 
 
         // Generación de QR (se asume que usas un paquete como Simple QR Code)
@@ -458,7 +460,7 @@ class DocumentsController extends Controller
 
         return $pdf->stream('hoja-inscripcion-' . $datos['codigo_inscripcion'] . '.pdf');
     }
-    
+
     // =======================
     //  KARDEX + APODERADOS
     // =======================
@@ -541,13 +543,95 @@ class DocumentsController extends Controller
             'estudiante_dir' => $persona?->direccion ?? '—',
 
             'apoderados' => $apoderados,
-           'apoderado_principal_nombre' => $apoderadoPrincipal?->persona?->nombre_completo ?? null,
+            'apoderado_principal_nombre' => $apoderadoPrincipal?->persona?->nombre_completo ?? null,
 
             'qr_value' => $qrValue,
             'logo_path' => $logoBase64,
             'foto_url' => $fotoBase64,
 
             'fecha_impresion' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+    }
+
+    public function descargarKardexEstudiante(int $id)
+    {
+        $datos = $this->getKardexEstudianteData($id);
+
+        $pdf = Pdf::loadView('pdf.kardex_estudiante', $datos)
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
+
+        return $pdf->download('KARDEX-ESTUDIANTE-' . ($datos['codigo_saga'] ?? $id) . '.pdf');
+    }
+
+    public function previewKardexEstudiante(int $id)
+    {
+        $datos = $this->getKardexEstudianteData($id);
+
+        $pdf = Pdf::loadView('pdf.kardex_estudiante', $datos)
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
+
+        return $pdf->stream('KARDEX-ESTUDIANTE-' . ($datos['codigo_saga'] ?? $id) . '.pdf');
+    }
+
+    protected function getKardexEstudianteData(int $estudianteId): array
+    {
+        $estudiante = Estudiante::with(['persona', 'discapacidades'])->findOrFail($estudianteId);
+        $persona = $estudiante->persona;
+
+        $discapacidades = [];
+
+        foreach ($estudiante->discapacidades as $d) {
+            $discapacidades[] = [
+                'nombre' => $d->nombre,
+                'codigo' => $d->codigo,
+                'descripcion' => $d->descripcion,
+                'observacion' => $d->pivot->observacion ?? null,
+            ];
+        }
+
+        $tiene_discapacidad = count($discapacidades) > 0;
+
+        $logoBase64 = $this->imageToBase64('images/logo.png')
+            ?? $this->imageToBase64('assets/logo.png');
+
+        // Foto estudiante (si existe)
+        $fotoBase64 = null;
+        if (!empty($estudiante->foto_url)) {
+            try {
+                $bin = Storage::disk('public')->get($estudiante->foto_url);
+                $fotoBase64 = 'data:image/png;base64,' . base64_encode($bin);
+            } catch (\Throwable $e) {
+                $fotoBase64 = null;
+            }
+        }
+
+        return [
+            'institucion' => 'Instituto Psicopedagógico EMANUEL MONTESSORI',
+            'fecha_impresion' => Carbon::now()->format('d/m/Y H:i'),
+
+            'estudiante_id' => $estudianteId,
+            'estudiante_nombre' => $persona?->nombre_completo ?? '—',
+            'estudiante_ci' => $persona?->carnet_identidad ?? '—',
+            'codigo_saga' => $estudiante->codigo_saga ?? '—',
+            'estudiante_edad' => $persona?->calcularEdad() ?? '—',
+            'estudiante_fn' => $persona?->fecha_nacimiento ? $persona->fecha_nacimiento->format('d/m/Y') : '—',
+            'estudiante_tel' => $persona?->telefono_principal ?? '—',
+            'estudiante_email' => $persona?->email_personal ?? '—',
+            'estudiante_dir' => $persona?->direccion ?? '—',
+
+            'discapacidades' => $discapacidades,
+            'tiene_discapacidad' => $tiene_discapacidad,
+
+            'logo_path' => $logoBase64,
+            'foto_url' => $fotoBase64,
         ];
     }
 
