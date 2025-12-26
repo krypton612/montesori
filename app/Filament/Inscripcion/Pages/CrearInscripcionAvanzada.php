@@ -151,28 +151,31 @@ class CrearInscripcionAvanzada extends Page implements HasForms
 
         $fecha = $data['fecha_inscripcion'] ?? null;
 
-        if ($fecha && $gestion->fecha_inicio && $gestion->fecha_fin) {
-            try {
-                $f = Carbon::parse($fecha)->startOfDay();
-                $inicio = Carbon::parse($gestion->fecha_inicio)->startOfDay();
-                $fin = Carbon::parse($gestion->fecha_fin)->endOfDay();
-
-                if ($f->lt($inicio)) {
-                    $this->fail('Fecha inválida', 'La fecha de inscripción es anterior al inicio de la gestión.', [
-                        'fecha_inscripcion' => 'Debe estar dentro del rango de la gestión.',
-                    ]);
-                }
-
-                if ($f->gt($fin)) {
-                    $this->fail('Fecha inválida', 'La fecha de inscripción es posterior al fin de la gestión.', [
-                        'fecha_inscripcion' => 'Debe estar dentro del rango de la gestión.',
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                $this->fail('Fecha inválida', 'La fecha de inscripción no tiene un formato válido.', [
-                    'fecha_inscripcion' => 'Fecha inválida.',
-                ]);
+        try {
+            if (!$fecha) {
+                throw new \Exception('La fecha de inscripción es obligatoria.');
             }
+
+            $fechaInscripcion = Carbon::parse($fecha)->startOfDay();
+
+            $inicioGestion = Carbon::parse($gestion->fecha_inicio)->startOfDay();
+            $finGestion    = Carbon::parse($gestion->fecha_fin)->endOfDay();
+
+            if ($fechaInscripcion->lt($inicioGestion) || $fechaInscripcion->gt($finGestion)) {
+                throw new \Exception('Debe estar dentro del rango de la gestión.');
+            }
+
+        } catch (\Exception $e) {
+
+            $this->fail(
+                'Fecha inválida',
+                $e->getMessage(), // 👈 CLAVE (observación de tu manager)
+                [
+                    'fecha_inscripcion' => 'Fecha inválida.',
+                ]
+            );
+
+            return;
         }
 
         // 3) grupo activo + pertenece a la gestión + con cursos
@@ -668,12 +671,11 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                 ->schema([
                                     Repeater::make('documentos')
                                         ->label('Documentos')
-                                        ->minItems(1)
-                                        ->required()
+                                        ->minItems(0)  // Allow zero items
                                         ->schema([
                                             Select::make('tipo_documento_id')
                                                 ->label('Tipo de Documento')
-                                                ->options(fn () => TipoDocumento::where('tipo', 'inscripcion')->pluck('nombre', 'id'))
+                                                ->options(fn() => TipoDocumento::where('tipo', 'inscripcion')->pluck('nombre', 'id'))
                                                 ->required()
                                                 ->searchable()
                                                 ->live()
@@ -684,7 +686,6 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                                 ->directory('inscripciones/documentos')
                                                 ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                                                 ->maxSize(5120)
-                                                ->required()
                                                 ->downloadable()
                                                 ->previewable()
                                                 ->columnSpan(1),
@@ -696,7 +697,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                                         ->itemLabel(fn (array $state): ?string =>
                                             TipoDocumento::find($state['tipo_documento_id'] ?? null)?->nombre ?? 'Nuevo documento'
                                         )
-                                        ->defaultItems(1)
+                                        ->defaultItems(0)  // No items by default, optional
                                         ->columnSpanFull()
                                         ->deleteAction(fn (Action $action) => $action->requiresConfirmation()),
                                 ])
@@ -721,7 +722,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
             $data = $this->form->getState();
 
             // Validación final (AHORA sí exige documentos)
-            $this->validateRestricciones($data, requireDocs: true);
+            $this->validateRestricciones($data, requireDocs: false);
 
             DB::beginTransaction();
 
@@ -814,7 +815,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                 ->seconds(5)
                 ->send();
 
-            $this->redirect(route('filament.informatica.resources.inscripcions.index'));
+            $this->redirect(route('filament.inscripcion.resources.inscripcions.index'));
 
         } catch (Halt $exception) {
             return;
@@ -860,7 +861,7 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                 ->label('Ver inscripciones')
                 ->icon('heroicon-o-list-bullet')
                 ->color('gray')
-                ->url(route('filament.informatica.resources.inscripcions.index')),
+                ->url(route('filament.inscripcion.resources.inscripcions.index')),
         ];
     }
 

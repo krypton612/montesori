@@ -125,7 +125,7 @@ class CrearInscripcionAvanzadaIrregular extends Page implements HasForms
                             ->helperText(fn(Get $get) => $this->getCursosHelperText($get('gestion_id')))
                             ->preload(),
 
-                        $this->getCursosInfoPlaceholder(),
+                        $this->getCursosPreviewRepeater(),
 
                         $this->getCondicionesRepeater(),
                     ])
@@ -344,14 +344,29 @@ class CrearInscripcionAvanzadaIrregular extends Page implements HasForms
             : 'Primero debe seleccionar una gestión académica';
     }
 
-    protected function procesarCondicionesCursos(callable $set, $state): void
-    {
-        if (!$state || empty($state)) {
-            $set('condiciones', []);
-            return;
-        }
+protected function procesarCondicionesCursos(callable $set, $state): void
+{
+    if (empty($state)) {
+        $set('condiciones', []);
+        $set('cursos_preview', []);
+        return;
+    }
 
-        $cursos = Curso::with('grupos')->find($state);
+    $cursos = Curso::with(['materia', 'turno', 'grupos'])->find($state);
+
+    $preview = $cursos->map(function ($curso) {
+        return [
+            'materia' => $curso->materia->nombre,
+            'seccion' => $curso->seccion,
+            'turno'   => $curso->turno->nombre,
+            'grupos'  => $curso->grupos->isNotEmpty()
+                ? $curso->grupos->pluck('nombre')->implode(', ')
+                : 'Inscripción irregular',
+        ];
+    })->toArray();
+
+    $set('cursos_preview', $preview);
+
         $condicionesUnicas = collect();
 
         foreach ($cursos as $curso) {
@@ -399,46 +414,35 @@ class CrearInscripcionAvanzadaIrregular extends Page implements HasForms
         ]));
     }
 
-    protected function getCursosInfoPlaceholder(): Placeholder
-    {
-        return Placeholder::make('cursos_info')
-            ->label('Resumen de Cursos Seleccionados')
-            ->content(fn(Get $get) => $this->generarInfoCursos($get('cursos')))
-            ->hidden(fn(Get $get) => !filled($get('cursos')))
-            ->columnSpanFull();
-    }
 
-    protected function generarInfoCursos($cursosIds): string
-    {
-        if (!$cursosIds || empty($cursosIds)) {
-            return 'Seleccione cursos para ver información detallada';
-        }
 
-        $cursos = Curso::with(['materia', 'turno', 'grupos'])->find($cursosIds);
+protected function getCursosPreviewRepeater(): Repeater
+{
+    return Repeater::make('cursos_preview')
+        ->label('Cursos Seleccionados')
+        ->schema([
+            TextInput::make('materia')
+                ->label('Materia')
+                ->disabled(),
 
-        if ($cursos->isEmpty()) {
-            return 'No se encontró información de los cursos';
-        }
+            TextInput::make('seccion')
+                ->label('Sección')
+                ->disabled(),
 
-        $info = "📚 **Total de cursos seleccionados:** " . $cursos->count() . "\n\n";
+            TextInput::make('turno')
+                ->label('Turno')
+                ->disabled(),
 
-        foreach ($cursos as $curso) {
-            $info .= sprintf(
-                "• %s (%s) - %s\n",
-                $curso->materia->nombre,
-                $curso->seccion,
-                $curso->turno->nombre
-            );
-
-            if ($curso->grupos && $curso->grupos->isNotEmpty()) {
-                $info .= "  └─ Grupos: " . $curso->grupos->pluck('nombre')->implode(', ') . "\n";
-            } else {
-                $info .= "  └─ **INSCRIPCIÓN IRREGULAR** (sin grupo asignado)\n";
-            }
-        }
-
-        return $info;
-    }
+            TextInput::make('grupos')
+                ->label('Grupos')
+                ->disabled(),
+        ])
+        ->columns(4)
+        ->disabled()
+        ->dehydrated(false)
+        ->hidden(fn (Get $get) => !filled($get('cursos')))
+        ->columnSpanFull();
+}
 
     protected function getCondicionesRepeater(): Repeater
     {
@@ -627,6 +631,15 @@ class CrearInscripcionAvanzadaIrregular extends Page implements HasForms
                 $data['gestion_id']
             );
 
+            $gestion = Gestion::find($data['gestion_id']);
+
+            $fechaInscripcion = \Illuminate\Support\Carbon::parse($data['fecha_inscripcion'])->startOfDay();
+            $inicioGestion    = $gestion->fecha_inicio->startOfDay();
+            $finGestion       = $gestion->fecha_fin->endOfDay();
+
+            if (! $fechaInscripcion->between($inicioGestion, $finGestion)) {
+                throw new \Exception('Debe estar dentro del rango de la gestión.');
+            }
 
 
             if ($duplicados->isNotEmpty()) {
@@ -673,12 +686,17 @@ class CrearInscripcionAvanzadaIrregular extends Page implements HasForms
 
             // Limpiar formulario y redirigir
             $this->form->fill();
-            $this->redirect(route('filament.informatica.resources.inscripcions.index'));
+            $this->redirect(route('filament.inscripcion.resources.inscripcions.index'));
 
         } catch (Halt $e) {
             // El halt se maneja automáticamente
             return;
         } catch (\Exception $e) {
+            $this->fail('Fecha inválida',
+            $e->getMessage(),
+            ['fecha_inscripcion' => 'Fecha inválida.',]
+            );
+
             Notification::make()
                 ->title('Error al crear inscripción')
                 ->body("Ocurrió un error: {$e->getMessage()}")
@@ -729,7 +747,7 @@ class CrearInscripcionAvanzadaIrregular extends Page implements HasForms
                 ->label('Ver inscripciones')
                 ->icon('heroicon-o-list-bullet')
                 ->color('gray')
-                ->url(route('filament.informatica.resources.inscripcions.index')),
+                ->url(route('filament.inscripcion.resources.inscripcions.index')),
 
             Action::make('ayuda')
                 ->label('Ayuda')
