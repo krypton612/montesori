@@ -242,18 +242,6 @@ class CrearInscripcionAvanzada extends Page implements HasForms
                 ['condiciones' => 'Hay condiciones obligatorias sin cumplir.']
             );
         }
-
-        // 6) documentos: SOLO si estamos validando final (submit)
-        if ($requireDocs) {
-            $docs = collect($data['documentos'] ?? []);
-            if ($docs->isEmpty()) {
-                $this->fail(
-                    'Faltan documentos',
-                    'Debe adjuntar al menos un documento para registrar la inscripción.',
-                    ['documentos' => 'Adjunte al menos un documento.']
-                );
-            }
-        }
     }
 
     // =========================================================

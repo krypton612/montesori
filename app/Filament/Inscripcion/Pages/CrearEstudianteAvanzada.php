@@ -27,7 +27,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
 
-
 class CrearEstudianteAvanzada extends Page implements HasForms
 {
     use InteractsWithForms;
