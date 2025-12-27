@@ -4,6 +4,7 @@ namespace App\Filament\Inscripcion\Pages;
 
 use App\Models\Apoderado;
 use App\Models\Estudiante;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
@@ -29,6 +30,7 @@ class KardexApoderados extends Page implements HasForms, HasTable
 {
     use InteractsWithForms;
     use InteractsWithTable;
+    use HasPageShield;
 
     protected string $view = 'filament.pages.kardex-apoderados';
 

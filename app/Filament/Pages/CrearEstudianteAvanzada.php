@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Apoderado;
 use App\Models\Estudiante;
 use App\Models\Persona;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -27,7 +28,7 @@ use Illuminate\Support\Facades\DB;
 
 class CrearEstudianteAvanzada extends Page implements HasForms
 {
-    use InteractsWithForms;
+    use InteractsWithForms, HasPageShield;
 
     protected string $view = 'filament.pages.crear-estudiante-avanzada';
 

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
 
 class Usuario extends Authenticatable implements FilamentUser
@@ -65,19 +66,19 @@ class Usuario extends Authenticatable implements FilamentUser
         // esto permitira a un usuario tener acceso a multiples paneles si tiene los permisos o roles adecuados
 
         if ($panel->getId() === 'informatica') {
-            return str_ends_with($this->email, '@adm.montessori.com.bo');
+            return $this->hasPermissionTo('AccessAdminPanel');
         }
 
         if ($panel->getId() === 'profesor') {
-            return str_ends_with($this->email, '@prof.montessori.com.bo');
+            return $this->hasPermissionTo('AccessProfesorPanel');
         }
 
         if ($panel->getId() === 'finanzas') {
-            return str_ends_with($this->email, '@eco.montessori.com.bo');
+            return $this->hasPermissionTo('AccessFinanzasPanel');
         }
 
         if ($panel->getId() === 'inscripcion') {
-            return str_ends_with($this->email, '@ins.montessori.com.bo');
+            return $this->hasPermissionTo('AccessInscripcionPanel');
         }
 
         return true;

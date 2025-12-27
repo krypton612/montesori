@@ -21,7 +21,7 @@ return [
             'pages' => true,
             'widgets' => true,
             'resources' => true,
-            'custom_permissions' => false,
+            'custom_permissions' => true,
         ],
     ],
 
@@ -226,7 +226,13 @@ return [
     |
     */
 
-    'custom_permissions' => [],
+    'custom_permissions' => [
+        // Definir los permisos para cada uno de los paneles
+        'access_admin_panel' => 'Acceso al panel de administración',
+        'access_finanzas_panel' => 'Acceso al panel de finanzas',
+        'access_profesor_panel' => 'Acceso al panel de profesores',
+        'access_inscripcion_panel' => 'Acceso al panel de inscripciones',
+    ],
 
     /*
     |--------------------------------------------------------------------------

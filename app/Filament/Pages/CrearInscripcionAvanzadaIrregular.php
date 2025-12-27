@@ -9,6 +9,7 @@ use App\Models\Estudiante;
 use App\Models\Gestion;
 use App\Models\Grupo;
 use App\Models\Inscripcion;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
@@ -34,7 +35,7 @@ use Illuminate\Support\Str;
 class CrearInscripcionAvanzadaIrregular extends Page implements HasForms
 {
 
-    use InteractsWithForms;
+    use InteractsWithForms, HasPageShield;
 
     protected string $view = 'filament.pages.crear-inscripcion-avanzada-irregular';
     protected static string|null|\UnitEnum $navigationGroup = 'Inscripcion Estudiantil';
