@@ -8,6 +8,7 @@ use Filament\Actions\Action as ActionsAction;
 use Filament\Pages\Page;
 use Filament\Resources\Concerns\HasTabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -24,8 +25,10 @@ class MisGruposMaterias extends Page implements HasTable
     use InteractsWithTable;
     use HasTabs;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
-    
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::RectangleStack;
+
     protected string $view = 'filament.profesor.pages.mis-grupos-materias';
     
     protected static ?string $navigationLabel = 'Mis Grupos y Materias';

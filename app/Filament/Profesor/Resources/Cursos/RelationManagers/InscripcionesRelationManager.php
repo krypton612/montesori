@@ -203,14 +203,7 @@ class InscripcionesRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->wrap(),
                     
-                TextColumn::make('condiciones')
-                    ->label('Condiciones')
-                    ->badge()
-                    ->color('warning')
-                    ->icon('heroicon-o-exclamation-triangle')
-                    ->placeholder('Sin condiciones')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->wrap(),
+                
                     
                 TextColumn::make('documentos_count')
                     ->label('Documentos')
