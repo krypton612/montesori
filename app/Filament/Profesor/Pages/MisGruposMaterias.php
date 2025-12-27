@@ -6,12 +6,15 @@ use App\Models\Grupo;
 use BackedEnum;
 use Filament\Actions\Action as ActionsAction;
 use Filament\Pages\Page;
+use Filament\Resources\Concerns\HasTabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Table;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
@@ -19,6 +22,7 @@ use UnitEnum;
 class MisGruposMaterias extends Page implements HasTable
 {
     use InteractsWithTable;
+    use HasTabs;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
     
@@ -119,8 +123,8 @@ class MisGruposMaterias extends Page implements HasTable
                     ->icon('heroicon-o-book-open')
                     ->color('primary')
                     ->modalHeading(fn (Grupo $record) => "Materias del grupo: {$record->nombre}")
-                    ->modalContent(fn (Grupo $record) => view('filament.profesor.modals.materias-grupo', [
-                        'materias' => $this->getMateriasDelGrupo($record)
+                    ->modalContent(fn (Grupo $record) => view('filament.profesor.modals.tabla-materias', [
+                        'grupoId' => $record->id,
                     ]))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Cerrar'),
@@ -159,5 +163,23 @@ class MisGruposMaterias extends Page implements HasTable
                   });
         })
         ->get();
+    }
+
+    public function getTabs(): array
+    {
+        return [
+            'all' => Tab::make('Todos los Grupos'),
+            'active' => Tab::make('Grupos Activos'),
+            'inactive' => Tab::make('Grupos Inactivos'),
+        ];
+    }
+    protected function getActiveTab(): string
+    {
+        return $this->activeTab ?? $this->getDefaultActiveTab() ?? 'all';
+    }
+
+    public function getDefaultActiveTab(): string
+    {
+        return 'all';
     }
 }
