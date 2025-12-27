@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Cursos\RelationManagers;
+namespace App\Filament\Profesor\Resources\Cursos\RelationManagers;
 
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;

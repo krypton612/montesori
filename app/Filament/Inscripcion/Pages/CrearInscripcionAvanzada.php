@@ -11,6 +11,7 @@ use App\Models\Gestion;
 use App\Models\Grupo;
 use App\Models\Inscripcion;
 use App\Models\TipoDocumento;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -42,7 +43,7 @@ use Illuminate\Validation\ValidationException;
 
 class CrearInscripcionAvanzada extends Page implements HasForms
 {
-    use InteractsWithForms;
+    use InteractsWithForms, HasPageShield;
 
     protected string $view = 'filament.pages.crear-inscripcion-avanzada';
 

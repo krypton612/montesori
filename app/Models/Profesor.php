@@ -45,6 +45,24 @@ class Profesor extends Model
         return $this->hasMany(Curso::class, 'profesor_id');
     }
 
+
+    public function grupos()
+    {
+        return $this->hasManyThrough(
+            Grupo::class,
+            Curso::class,
+            'profesor_id',  // Foreign key en tabla curso
+            'id',           // Foreign key en tabla grupo
+            'id',           // Local key en tabla profesor
+            'id'            // Local key en tabla curso
+        )
+        ->join('curso_grupo', 'curso_grupo.grupo_id', '=', 'grupo.id')
+        // probable SQLI
+        ->where('curso_grupo.curso_id', '=', \DB::raw('curso.id'))
+        ->distinct()
+        ->select('grupo.*');
+    }
+
     public function getNombreCompletoAttribute()
     {
         return trim($this->persona->nombre . ' ' . $this->persona->apellido_pat . ' ' . $this->persona->apellido_mat);

@@ -21,29 +21,29 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class InscripcionPanelProvider extends PanelProvider
+class ProfesorPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('inscripcion')
-            ->path('inscripcion')
+            ->id('profesor')
+            ->path('profesor')
             ->login()
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->discoverResources(in: app_path('Filament/Inscripcion/Resources'), for: 'App\Filament\Inscripcion\Resources')
-            ->discoverPages(in: app_path('Filament/Inscripcion/Pages'), for: 'App\Filament\Inscripcion\Pages')
+            ->discoverResources(in: app_path('Filament/Profesor/Resources'), for: 'App\Filament\Profesor\Resources')
+            ->discoverPages(in: app_path('Filament/Profesor/Pages'), for: 'App\Filament\Profesor\Pages')
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Inscripcion/Widgets'), for: 'App\Filament\Inscripcion\Widgets')
+            ->resources([
+                UsuarioResource::class,
+            ])
+            ->discoverWidgets(in: app_path('Filament/Profesor/Widgets'), for: 'App\Filament\Profesor\Widgets')
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,
-            ])
-            ->resources([
-                UsuarioResource::class,
             ])
             ->plugins([
                 FilamentShieldPlugin::make()->navigationGroup('Seguridad'),
