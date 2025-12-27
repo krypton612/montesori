@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\Usuarios\UsuarioResource;
 use Aymanalhattami\FilamentSlimScrollbar\FilamentSlimScrollbarServiceProvider;
 use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -54,6 +55,9 @@ class InformaticaPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,
+            ])
+            ->resources([
+                UsuarioResource::class,
             ])
             ->middleware([
                 EncryptCookies::class,

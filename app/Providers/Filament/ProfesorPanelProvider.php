@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\Usuarios\UsuarioResource;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -35,6 +36,9 @@ class ProfesorPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Profesor/Pages'), for: 'App\Filament\Profesor\Pages')
             ->pages([
                 Dashboard::class,
+            ])
+            ->resources([
+                UsuarioResource::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Profesor/Widgets'), for: 'App\Filament\Profesor\Widgets')
             ->widgets([
