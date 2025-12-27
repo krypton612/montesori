@@ -4,6 +4,7 @@ namespace App\Livewire\Profesor;
 
 use App\Models\Curso;
 use Dom\Text;
+use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -47,6 +48,9 @@ class MateriasGrupoTable extends Component implements HasTable, HasForms, HasSch
                     ->label('ID')
                     ->icon(Heroicon::AcademicCap)
                     ->sortable()
+                    ->formatStateUsing(fn ($state, $record): string => 
+                        sprintf("MTS-", $state) . ($record->seccion ? " ({$record->seccion})" : '')
+                    )
                     ->searchable(),
                 TextColumn::make('seccion')
                     ->label('Codigo Curso')
@@ -70,6 +74,7 @@ class MateriasGrupoTable extends Component implements HasTable, HasForms, HasSch
                 IconColumn::make('materia.habilitado')
                     ->label('Habilitado')
                     ->boolean(),
+                
             ])
             ->filters([
                 SelectFilter::make('materia.nivel')
@@ -95,7 +100,26 @@ class MateriasGrupoTable extends Component implements HasTable, HasForms, HasSch
                 
             ])
             ->actions([
-                // ...
+                Action::make('ver_malla')
+                    ->label('Ver Malla Curricular')
+                    ->icon(Heroicon::ArrowDownCircle)
+                    ->color('success')
+                    ->action(function () {
+                        // Lógica para descargar las materias en formato PDF o Excel
+                        // Puedes usar paquetes como maatwebsite/excel para Excel
+                        // o dompdf/dompdf para PDF
+                    }),
+            ])
+            ->headerActions([
+                Action::make('descargar_materias')
+                    ->label('Imprimir Materias')
+                    ->icon(Heroicon::ArrowDownOnSquareStack)
+                    ->color('primary')
+                    ->action(function () {
+                        // Lógica para descargar las materias en formato PDF o Excel
+                        // Puedes usar paquetes como maatwebsite/excel para Excel
+                        // o dompdf/dompdf para PDF
+                    }),
             ])
             ->bulkActions([
                 // ...
